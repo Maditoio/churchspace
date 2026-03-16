@@ -3,16 +3,13 @@ import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Resend from "next-auth/providers/resend";
+import authConfig from "@/lib/auth.config";
 import { prisma } from "@/lib/prisma";
-import type { UserRole } from "@/types";
 import { signInSchema } from "@/lib/validations";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/signin",
-  },
   providers: [
     Credentials({
       credentials: {
@@ -48,36 +45,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       apiKey: process.env.RESEND_API_KEY,
     }),
   ],
-  callbacks: {
-    authorized({ auth: session, request }) {
-      const isLoggedIn = !!session?.user;
-      const pathname = request.nextUrl.pathname;
-
-      if (pathname.startsWith("/dashboard")) {
-        return isLoggedIn;
-      }
-
-      if (pathname.startsWith("/admin")) {
-        return isLoggedIn && session?.user?.role === "SUPER_ADMIN";
-      }
-
-      return true;
-    },
-    jwt({ token, user }) {
-      if (user) {
-        token.role = (user as { role?: UserRole }).role ?? "USER";
-      }
-      return token;
-    },
-    session({ session, user, token }) {
-      if (session.user) {
-        session.user.id = user?.id ?? token.sub ?? "";
-        session.user.role = ((user as { role?: UserRole } | undefined)?.role ?? token.role as UserRole | undefined) ?? "USER";
-        session.user.name = user?.name ?? session.user.name;
-        session.user.email = user?.email ?? session.user.email;
-        session.user.image = user?.image ?? session.user.image;
-      }
-      return session;
-    },
-  },
 });
