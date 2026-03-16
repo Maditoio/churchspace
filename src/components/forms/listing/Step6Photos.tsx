@@ -1,38 +1,106 @@
 "use client";
 
-import { UploadButton } from "@uploadthing/react";
-import type { OurFileRouter } from "@/lib/uploadthing";
-import { useState } from "react";
+import { upload } from "@vercel/blob/client";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { toast } from "sonner";
 
 type UploadedFile = { url: string; name: string };
 
+const MAX_FILES = 20;
+const MAX_FILE_SIZE = 8 * 1024 * 1024;
+
+function sanitizeFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
 export function Step6Photos() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   function remove(url: string) {
     setFiles((prev) => prev.filter((f) => f.url !== url));
+  }
+
+  async function onSelectFiles(event: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files ?? []);
+
+    if (!selectedFiles.length) {
+      return;
+    }
+
+    const remainingSlots = MAX_FILES - files.length;
+    if (remainingSlots <= 0) {
+      toast.error(`You can upload up to ${MAX_FILES} photos.`);
+      event.target.value = "";
+      return;
+    }
+
+    const oversized = selectedFiles.find((file) => file.size > MAX_FILE_SIZE);
+    if (oversized) {
+      toast.error(`${oversized.name} is larger than 8MB.`);
+      event.target.value = "";
+      return;
+    }
+
+    const filesToUpload = selectedFiles.slice(0, remainingSlots);
+    if (selectedFiles.length > filesToUpload.length) {
+      toast.error(`Only ${remainingSlots} more photo${remainingSlots > 1 ? "s" : ""} can be added.`);
+    }
+
+    setUploading(true);
+
+    try {
+      const uploadedFiles = await Promise.all(
+        filesToUpload.map(async (file) => {
+          const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
+          const blob = await upload(pathname, file, {
+            access: "public",
+            handleUploadUrl: "/api/blob/upload",
+            multipart: true,
+          });
+
+          return {
+            url: blob.url,
+            name: file.name,
+          };
+        }),
+      );
+
+      setFiles((prev) => [...prev, ...uploadedFiles].slice(0, MAX_FILES));
+      toast.success(`${uploadedFiles.length} photo${uploadedFiles.length > 1 ? "s" : ""} uploaded`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
   }
 
   return (
     <div className="space-y-4">
       <p className="text-sm font-medium text-[var(--text-primary)]">Upload listing photos (up to 20)</p>
       <div className="rounded-(--radius) border border-dashed border-(--border) bg-(--surface-raised) p-8 text-center">
-        <UploadButton<OurFileRouter, "listingImageUploader">
-          endpoint="listingImageUploader"
-          onClientUploadComplete={(res) => {
-            const newFiles = res.map((f) => ({ url: f.ufsUrl ?? f.url, name: f.name }));
-            setFiles((prev) => [...prev, ...newFiles].slice(0, 20));
-            toast.success(`${res.length} photo${res.length > 1 ? "s" : ""} uploaded`);
-          }}
-          onUploadError={(err) => { toast.error(err.message ?? "Upload failed"); }}
-          appearance={{
-            button: "bg-[var(--primary)] text-white rounded-[10px] px-5 h-11 text-sm font-medium",
-            allowedContent: "text-xs text-[var(--text-muted)] mt-2",
-          }}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={onSelectFiles}
         />
+        <button
+          type="button"
+          className="h-11 rounded-[10px] bg-[var(--primary)] px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading || files.length >= MAX_FILES}
+        >
+          {uploading ? "Uploading..." : files.length >= MAX_FILES ? "Photo Limit Reached" : "Choose Photos"}
+        </button>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">PNG, JPG, WEBP up to 8MB each. Maximum 20 photos.</p>
       </div>
 
       {/* Hidden inputs so parent form can read URLs */}
