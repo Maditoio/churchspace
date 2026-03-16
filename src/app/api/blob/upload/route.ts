@@ -8,9 +8,17 @@ export async function POST(request: Request) {
   const body = (await request.json()) as HandleUploadBody;
 
   try {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return NextResponse.json(
+        { error: "Missing BLOB_READ_WRITE_TOKEN environment variable." },
+        { status: 500 },
+      );
+    }
+
     const jsonResponse = await handleUpload({
       body,
       request,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
       onBeforeGenerateToken: async () => {
         const session = await auth();
 
@@ -31,6 +39,8 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Upload initialization failed";
     const status = message === "Unauthorized" ? 401 : 400;
+
+    console.error("Blob upload setup failed", error);
 
     return NextResponse.json({ error: message }, { status });
   }
