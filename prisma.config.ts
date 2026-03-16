@@ -6,11 +6,21 @@ dotenv.config();
 
 function resolveDatabaseUrl() {
   return (
-    process.env.DIRECT_DATABASE_URL ||
     process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL_NON_POOLING ||
     process.env.POSTGRES_PRISMA_URL ||
     process.env.POSTGRES_URL ||
+    process.env.DIRECT_DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    ""
+  );
+}
+
+function resolveDirectDatabaseUrl() {
+  return (
+    process.env.DIRECT_DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
     ""
   );
 }
@@ -18,5 +28,6 @@ function resolveDatabaseUrl() {
 export default defineConfig({
   datasource: {
     url: resolveDatabaseUrl(),
+    directUrl: resolveDirectDatabaseUrl(),
   },
 });
