@@ -19,7 +19,6 @@ export function NewListingWizard() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
-  const ActiveStep = steps[step - 1];
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -124,7 +123,18 @@ export function NewListingWizard() {
       <form onSubmit={submit} className="overflow-hidden rounded-(--radius-xl) border border-(--border-strong) bg-white/92 p-5 shadow-(--shadow-lg) backdrop-blur md:p-8">
         <StepProgress step={step} />
         <div className="mt-8 rounded-(--radius-lg) bg-[linear-gradient(180deg,rgba(246,246,241,0.7),rgba(255,255,255,0.96))] p-5 md:p-7">
-          <ActiveStep />
+          {steps.map((StepComponent, index) => {
+            const currentStep = index + 1;
+            return (
+              <div
+                key={currentStep}
+                className={currentStep === step ? "block" : "hidden"}
+                aria-hidden={currentStep === step ? undefined : true}
+              >
+                <StepComponent />
+              </div>
+            );
+          })}
         </div>
         <div className="mt-8 flex items-center justify-between gap-3 border-t border-(--border) pt-6">
           <Button type="button" variant="secondary" onClick={() => setStep((prev) => Math.max(1, prev - 1))}>
