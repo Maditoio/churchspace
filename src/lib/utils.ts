@@ -28,6 +28,14 @@ export function slugify(input: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Convert a URL slug back to a display label: "cape-town" → "Cape Town". */
+export function slugToLabel(slug: string): string {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function listingTypeLabel(value: string) {
   return value.charAt(0) + value.slice(1).toLowerCase();
 }

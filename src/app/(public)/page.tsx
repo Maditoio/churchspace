@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { mapListingToCard } from "@/lib/listings";
+import { FEATURED_COUNTRIES } from "@/lib/locations";
+import { slugify } from "@/lib/utils";
 
 const CATEGORIES = [
   { label: "Sanctuary", value: "SANCTUARY", Icon: Church },
@@ -139,6 +141,34 @@ export default async function HomePage() {
               <span className="text-center text-sm font-medium text-foreground">{label}</span>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* Browse by Country */}
+      <section className="mx-auto max-w-7xl px-4 md:px-8">
+        <div className="flex items-end justify-between gap-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-(--accent-strong)">Pan-Africa</p>
+            <h2 className="mt-2 font-display text-4xl text-foreground">Browse by Country</h2>
+          </div>
+          <Link href="/locations" className="text-sm text-(--text-secondary) hover:underline">All Countries →</Link>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          {FEATURED_COUNTRIES.map((country) => (
+            <Link
+              key={country}
+              href={`/locations/${slugify(country)}`}
+              className="rounded-full border border-(--border) bg-white/88 px-5 py-2 text-sm font-medium text-foreground shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--accent) hover:shadow-(--shadow-md)"
+            >
+              {country}
+            </Link>
+          ))}
+          <Link
+            href="/locations"
+            className="rounded-full border border-(--accent) bg-(--accent-light) px-5 py-2 text-sm font-medium text-(--accent-strong) shadow-(--shadow-sm) transition-all duration-200 hover:-translate-y-0.5"
+          >
+            + More Countries
+          </Link>
         </div>
       </section>
 
