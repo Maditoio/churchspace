@@ -1,0 +1,53 @@
+import { ListingType, PropertyType, AvailabilityType } from "@prisma/client";
+import { z } from "zod";
+
+export const signUpSchema = z.object({
+  name: z.string().min(2),
+  email: z.email(),
+  password: z.string().min(8),
+  churchName: z.string().min(2),
+  denomination: z.string().optional(),
+  phone: z.string().min(8),
+  whatsapp: z.string().optional(),
+});
+
+export const signInSchema = z.object({
+  email: z.email(),
+  password: z.string().min(8),
+});
+
+export const enquirySchema = z.object({
+  listingId: z.string().cuid(),
+  senderName: z.string().min(2),
+  senderEmail: z.email(),
+  senderPhone: z.string().optional(),
+  message: z.string().min(12),
+});
+
+export const listingSchema = z.object({
+  title: z.string().min(10),
+  description: z.string().min(100),
+  propertyType: z.nativeEnum(PropertyType),
+  listingType: z.array(z.nativeEnum(ListingType)).min(1),
+  address: z.string().min(5),
+  suburb: z.string().min(2),
+  city: z.string().min(2),
+  province: z.string().min(2),
+  country: z.string().default("South Africa"),
+  congregationSize: z.number().int().positive().optional(),
+  areaSquareMeters: z.number().positive().optional(),
+  parkingSpaces: z.number().int().nonnegative().optional(),
+  features: z.array(z.string()).default([]),
+  equipment: z.array(z.string()).default([]),
+  availabilityType: z.nativeEnum(AvailabilityType).default(AvailabilityType.BY_REQUEST),
+  availableFrom: z.string().optional(),
+  availableTo: z.string().optional(),
+  rentPricePerHour: z.number().nonnegative().optional(),
+  rentPricePerDay: z.number().nonnegative().optional(),
+  rentPricePerMonth: z.number().nonnegative().optional(),
+  salePrice: z.number().nonnegative().optional(),
+  depositAmount: z.number().nonnegative().optional(),
+  sharingSchedule: z.array(z.object({ day: z.string(), startTime: z.string(), endTime: z.string(), isAvailable: z.boolean() })).optional(),
+});
+
+export type ListingInput = z.infer<typeof listingSchema>;

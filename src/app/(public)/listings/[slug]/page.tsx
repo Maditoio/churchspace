@@ -1,0 +1,102 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { EquipmentBadges } from "@/components/listings/EquipmentBadges";
+import { AvailabilityGrid } from "@/components/listings/AvailabilityGrid";
+import { ContactAgentCard } from "@/components/listings/ContactAgentCard";
+import { ImageGallery } from "@/components/listings/ImageGallery";
+import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const now = new Date();
+  const listing = await prisma.listing.findFirst({
+    where: {
+      slug,
+      status: "ACTIVE",
+      paymentStatus: "PAID",
+      paymentExpiresAt: { gte: now },
+      isTaken: false,
+    },
+    include: { images: true },
+  });
+  if (!listing) return { title: "Listing Not Found | ChurchSpace" };
+  return {
+    title: `${listing.title} | ChurchSpace`,
+    description: listing.description.slice(0, 160),
+    openGraph: {
+      title: listing.title,
+      description: listing.description.slice(0, 160),
+      images: listing.images[0]?.url ? [listing.images[0].url] : [],
+    },
+  };
+}
+
+export default async function ListingDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const now = new Date();
+  const listing = await prisma.listing.findFirst({
+    where: {
+      slug,
+      status: "ACTIVE",
+      paymentStatus: "PAID",
+      paymentExpiresAt: { gte: now },
+      isTaken: false,
+    },
+    include: { images: true, agent: true },
+  });
+
+  if (!listing) notFound();
+
+  const schedule = Array.isArray(listing.sharingSchedule)
+    ? (listing.sharingSchedule as { day: string; startTime: string; endTime: string; isAvailable: boolean }[])
+    : [];
+
+  return (
+    <div className="mx-auto grid max-w-[1280px] gap-8 px-4 py-12 md:grid-cols-[2fr_1fr] md:px-8">
+      <div className="space-y-8">
+        <ImageGallery images={listing.images} />
+        <section>
+          <h1 className="font-display text-5xl text-[var(--text-primary)]">{listing.title}</h1>
+          <p className="mt-3 whitespace-pre-line text-[var(--text-secondary)]">{listing.description}</p>
+        </section>
+        <section>
+          <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Details</h2>
+          <div className="grid gap-2 md:grid-cols-2">
+            <div className="rounded-lg border border-[var(--border)] p-3">Type: {listing.propertyType.replace(/_/g, " ")}</div>
+            <div className="rounded-lg border border-[var(--border)] p-3">Capacity: {listing.congregationSize ?? "-"}</div>
+            <div className="rounded-lg border border-[var(--border)] p-3">Parking: {listing.parkingSpaces ?? "-"}</div>
+            <div className="rounded-lg border border-[var(--border)] p-3">Area: {listing.areaSquareMeters ?? "-"} m2</div>
+          </div>
+        </section>
+        <section>
+          <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Equipment</h2>
+          <EquipmentBadges items={(listing.equipment as string[]) ?? []} />
+        </section>
+        <section>
+          <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Availability</h2>
+          <AvailabilityGrid slots={schedule} />
+        </section>
+        <section>
+          <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Map</h2>
+          <iframe
+            title="Property Location"
+            className="h-80 w-full rounded-[var(--radius)] border border-[var(--border)]"
+            loading="lazy"
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${(listing.longitude ?? 28.0) - 0.03}%2C${(listing.latitude ?? -26.1) - 0.03}%2C${(listing.longitude ?? 28.0) + 0.03}%2C${(listing.latitude ?? -26.1) + 0.03}&layer=mapnik&marker=${listing.latitude ?? -26.1}%2C${listing.longitude ?? 28.0}`}
+          />
+        </section>
+      </div>
+      <ContactAgentCard
+        listing={{ id: listing.id, title: listing.title, slug: listing.slug, suburb: listing.suburb, city: listing.city }}
+        agent={{
+          name: listing.agent.name,
+          churchName: listing.agent.churchName,
+          denomination: listing.agent.denomination,
+          email: listing.agent.email,
+          whatsapp: listing.agent.whatsapp,
+          avatar: listing.agent.avatar,
+        }}
+      />
+    </div>
+  );
+}

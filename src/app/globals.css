@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f3ee;
+  --surface: #fffdf9;
+  --surface-raised: #f3efe7;
+  --surface-glass: rgba(255, 253, 249, 0.84);
+  --border: #ddd4c8;
+  --border-strong: #c8baa8;
+  --border-subtle: #ece4d9;
+  --primary: #12312b;
+  --primary-hover: #0d2621;
+  --primary-soft: #dde8e4;
+  --accent: #c7774b;
+  --accent-strong: #a65e36;
+  --accent-light: #f6dfd1;
+  --accent-hover: #b86b42;
+  --text-primary: #142620;
+  --text-secondary: #5c645f;
+  --text-muted: #8f938f;
+  --text-inverse: #ffffff;
+  --success: #267154;
+  --success-light: #daf1e4;
+  --warning: #b7791f;
+  --warning-light: #fef3c7;
+  --destructive: #c0392b;
+  --destructive-light: #fdecea;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --shadow-sm: 0 8px 24px rgba(18, 49, 43, 0.06);
+  --shadow-md: 0 18px 40px rgba(18, 49, 43, 0.1);
+  --shadow-lg: 0 28px 80px rgba(18, 49, 43, 0.14);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(199, 119, 75, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(18, 49, 43, 0.08), transparent 32%),
+    linear-gradient(180deg, #fbf8f3 0%, var(--background) 42%, #f0ebe2 100%);
+  color: var(--text-primary);
+  font-family: var(--font-body), sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+.font-display {
+  font-family: var(--font-display), serif;
+}
+
+::selection {
+  background: rgba(199, 119, 75, 0.22);
+  color: var(--text-primary);
+}
+
+a {
+  transition: color 180ms ease, opacity 180ms ease, transform 180ms ease;
+}
+
+* {
+  border-color: var(--border);
+  box-sizing: border-box;
+}
