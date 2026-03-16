@@ -56,23 +56,32 @@ export function Step6Photos() {
       const uploadedFiles = await Promise.all(
         filesToUpload.map(async (file) => {
           const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
-          const blob = await upload(pathname, file, {
+
+          const uploadPromise = upload(pathname, file, {
             access: "public",
             handleUploadUrl: "/api/blob/upload",
             contentType: file.type,
           });
 
-          return {
-            url: blob.url,
-            name: file.name,
-          };
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Upload timed out — please check your connection and try again.")), 30_000),
+          );
+
+          const blob = await Promise.race([uploadPromise, timeoutPromise]);
+
+          return { url: blob.url, name: file.name };
         }),
       );
 
       setFiles((prev) => [...prev, ...uploadedFiles].slice(0, MAX_FILES));
       toast.success(`${uploadedFiles.length} photo${uploadedFiles.length > 1 ? "s" : ""} uploaded`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Upload failed";
+      const raw = error instanceof Error ? error.message : "Upload failed";
+      // "Failed to fetch" means the server couldn't generate an upload token (missing Blob config)
+      const message =
+        raw === "Failed to fetch"
+          ? "Upload failed: the server could not reach Vercel Blob. Check BLOB_READ_WRITE_TOKEN is set."
+          : raw;
       toast.error(message);
     } finally {
       setUploading(false);
