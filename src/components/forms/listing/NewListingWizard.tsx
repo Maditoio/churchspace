@@ -27,6 +27,13 @@ export function NewListingWizard() {
     const listingType = formData.getAll("listingType").map(String);
     const features = formData.getAll("features").map(String);
     const equipment = formData.getAll("equipment").map(String);
+    const primaryImageUrl = String(formData.get("primaryImageUrl") ?? "").trim();
+    const additionalImageUrls = formData
+      .getAll("imageUrls")
+      .map(String)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const imageUrls = [primaryImageUrl, ...additionalImageUrls].filter(Boolean);
 
     const payload = {
       title: String(formData.get("title") ?? ""),
@@ -54,27 +61,51 @@ export function NewListingWizard() {
     };
 
     setSubmitting(true);
-    const response = await fetch("/api/listings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    setSubmitting(false);
+    try {
+      const response = await fetch("/api/listings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (response.status === 401) {
-      toast.error("Please sign in before creating a listing.");
-      router.push("/signin?callbackUrl=/dashboard/listings/new");
-      return;
+      if (response.status === 401) {
+        toast.error("Please sign in before creating a listing.");
+        router.push("/signin?callbackUrl=/dashboard/listings/new");
+        return;
+      }
+
+      if (!response.ok) {
+        toast.error("Could not submit listing for review.");
+        return;
+      }
+
+      const { listing } = await response.json();
+
+      if (listing?.id && imageUrls.length > 0) {
+        const imagesResponse = await fetch(`/api/listings/${listing.id}/images`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            images: imageUrls.map((url, index) => ({
+              url,
+              isPrimary: index === 0,
+              order: index,
+            })),
+          }),
+        });
+
+        if (!imagesResponse.ok) {
+          toast.error("Listing was created, but photos could not be attached.");
+          return;
+        }
+      }
+
+      toast.success("Listing submitted for review.");
+      router.push("/dashboard/listings");
+      router.refresh();
+    } finally {
+      setSubmitting(false);
     }
-
-    if (!response.ok) {
-      toast.error("Could not submit listing for review.");
-      return;
-    }
-
-    toast.success("Listing submitted for review.");
-    router.push("/dashboard/listings");
-    router.refresh();
   }
 
   return (

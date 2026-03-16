@@ -59,7 +59,7 @@ export function Step6Photos() {
           const blob = await upload(pathname, file, {
             access: "public",
             handleUploadUrl: "/api/blob/upload",
-            multipart: true,
+            contentType: file.type,
           });
 
           return {
@@ -82,7 +82,7 @@ export function Step6Photos() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm font-medium text-[var(--text-primary)]">Upload listing photos (up to 20)</p>
+      <p className="text-sm font-medium text-foreground">Upload listing photos (up to 20)</p>
       <div className="rounded-(--radius) border border-dashed border-(--border) bg-(--surface-raised) p-8 text-center">
         <input
           ref={inputRef}
@@ -111,10 +111,10 @@ export function Step6Photos() {
       {files.length > 0 && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {files.map((f, idx) => (
-            <div key={f.url} className="relative aspect-[4/3] overflow-hidden rounded-lg border border-(--border)">
+            <div key={f.url} className="relative aspect-4/3 overflow-hidden rounded-lg border border-(--border)">
               <Image src={f.url} alt={f.name} fill className="object-cover" />
               {idx === 0 && (
-                <span className="absolute left-1 top-1 rounded-full bg-[var(--accent)] px-2 py-0.5 text-xs font-semibold text-[var(--primary)]">Cover</span>
+                <span className="absolute left-1 top-1 rounded-full bg-(--accent) px-2 py-0.5 text-xs font-semibold text-(--primary)">Cover</span>
               )}
               <button
                 type="button"
