@@ -6,6 +6,8 @@ import { ContactAgentCard } from "@/components/listings/ContactAgentCard";
 import { ImageGallery } from "@/components/listings/ImageGallery";
 import { prisma } from "@/lib/prisma";
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const now = new Date();
@@ -20,12 +22,30 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     include: { images: true },
   });
   if (!listing) return { title: "Listing Not Found | ChurchSpace" };
+  const description = listing.description.slice(0, 160);
+  const listingUrl = `${siteUrl}/listings/${listing.slug}`;
+  const title = `${listing.title} | ChurchSpace`;
+
   return {
-    title: `${listing.title} | ChurchSpace`,
-    description: listing.description.slice(0, 160),
+    title,
+    description,
+    keywords: [
+      "church building to rent",
+      "church property for sale",
+      "conference space",
+      "youth ministry venue",
+      listing.city,
+      listing.suburb,
+      listing.propertyType.replace(/_/g, " "),
+    ],
+    alternates: {
+      canonical: listingUrl,
+    },
     openGraph: {
-      title: listing.title,
-      description: listing.description.slice(0, 160),
+      title,
+      description,
+      url: listingUrl,
+      type: "article",
       images: listing.images[0]?.url ? [listing.images[0].url] : [],
     },
   };

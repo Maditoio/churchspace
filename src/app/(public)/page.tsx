@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Church, Tv2, Users, Trees, Building2 } from "lucide-react";
 import { SearchBar } from "@/components/listings/SearchBar";
@@ -14,6 +15,17 @@ const CATEGORIES = [
   { label: "Vacant Land", value: "VACANT_LAND", Icon: Trees },
   { label: "Full Premises", value: "FULL_PREMISES", Icon: Building2 },
 ];
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+
+export const metadata: Metadata = {
+  title: "Church Buildings to Rent or Buy in South Africa",
+  description:
+    "Search church buildings to rent or buy, conference spaces, halls, and youth ministry venues on ChurchSpace. Find verified church property listings across South Africa.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default async function HomePage() {
   const session = await auth();
@@ -36,9 +48,33 @@ export default async function HomePage() {
   });
 
   const listings = featured.map(mapListingToCard);
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "ChurchSpace",
+    url: siteUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "ChurchSpace",
+    url: siteUrl,
+    description:
+      "ChurchSpace helps churches and ministries find church buildings for rent or sale, conference venues, and youth ministry spaces.",
+    areaServed: "South Africa",
+  };
 
   return (
     <div className="space-y-24 pb-24">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-(--border) py-24">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(199,119,75,0.18),transparent_28%),radial-gradient(circle_at_85%_10%,rgba(18,49,43,0.16),transparent_32%),linear-gradient(135deg,rgba(255,253,249,0.92),rgba(243,239,231,0.68))]" />
@@ -51,7 +87,7 @@ export default async function HomePage() {
               Find a space that feels ready before the first service starts.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-(--text-secondary) md:text-lg">
-              ChurchSpace connects congregations, ministries, and faith-based organisations to spaces that are practical, dignified, and easy to evaluate.
+              ChurchSpace helps you find a church building to rent, buy church property, compare conference space options, and secure youth-friendly ministry venues across South Africa.
             </p>
             <div className="mt-8 max-w-3xl"><SearchBar /></div>
             <div className="mt-8 flex flex-wrap gap-4 text-sm text-(--text-secondary)">
@@ -128,6 +164,65 @@ export default async function HomePage() {
               <h3 className="mt-2 font-display text-3xl text-foreground">{step.title}</h3>
               <p className="mt-2 text-sm text-(--text-secondary)">{step.copy}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 md:px-8">
+        <h2 className="font-display text-4xl text-foreground">Church Buildings, Conference Spaces and Youth Venues</h2>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <article className="rounded-(--radius-lg) border border-(--border) bg-white/86 p-6 shadow-(--shadow-sm)">
+            <h3 className="font-display text-3xl text-foreground">Church Buildings to Rent</h3>
+            <p className="mt-2 text-sm leading-7 text-(--text-secondary)">
+              Browse church buildings to rent for weekly services, prayer nights, revivals, and outreach events. Filter by location, property type, and venue size to find the right fit for your congregation.
+            </p>
+          </article>
+          <article className="rounded-(--radius-lg) border border-(--border) bg-white/86 p-6 shadow-(--shadow-sm)">
+            <h3 className="font-display text-3xl text-foreground">Church Property for Sale</h3>
+            <p className="mt-2 text-sm leading-7 text-(--text-secondary)">
+              Explore church property listings for sale, including sanctuaries, halls, full premises, and land suitable for ministry expansion. Evaluate photos, amenities, and location data in one place.
+            </p>
+          </article>
+          <article className="rounded-(--radius-lg) border border-(--border) bg-white/86 p-6 shadow-(--shadow-sm)">
+            <h3 className="font-display text-3xl text-foreground">Conference Space for Churches</h3>
+            <p className="mt-2 text-sm leading-7 text-(--text-secondary)">
+              Find conference rooms and meeting spaces for leadership workshops, church admin sessions, women and men conferences, and ministry training weekends.
+            </p>
+          </article>
+          <article className="rounded-(--radius-lg) border border-(--border) bg-white/86 p-6 shadow-(--shadow-sm)">
+            <h3 className="font-display text-3xl text-foreground">Youth Ministry Spaces</h3>
+            <p className="mt-2 text-sm leading-7 text-(--text-secondary)">
+              Discover spaces suitable for youth services, discipleship classes, music rehearsals, and church youth conferences with room for safe, energetic gatherings.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 md:px-8">
+        <h2 className="font-display text-4xl text-foreground">Frequently Asked Questions</h2>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {[
+            {
+              q: "Can I find a church building to rent monthly?",
+              a: "Yes. Many listings are suitable for monthly church rental arrangements, recurring weekly services, and long-term ministry occupancy.",
+            },
+            {
+              q: "Do you list church buildings for sale?",
+              a: "Yes. ChurchSpace includes church property sale listings, from sanctuaries and halls to full ministry premises and land.",
+            },
+            {
+              q: "Can we search for conference and seminar venues?",
+              a: "Yes. You can search conference spaces for church leadership, training events, seminars, and ministry planning sessions.",
+            },
+            {
+              q: "Are there youth-friendly venues?",
+              a: "Yes. Listings include spaces that can support youth ministry gatherings, worship nights, and church youth programs.",
+            },
+          ].map((item) => (
+            <article key={item.q} className="rounded-(--radius-lg) border border-(--border) bg-white/86 p-6 shadow-(--shadow-sm)">
+              <h3 className="text-lg font-semibold text-foreground">{item.q}</h3>
+              <p className="mt-2 text-sm leading-7 text-(--text-secondary)">{item.a}</p>
+            </article>
           ))}
         </div>
       </section>
