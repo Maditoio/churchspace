@@ -7,26 +7,43 @@ const ALLOWED_IMAGE_CONTENT_TYPES = ["image/*", "application/octet-stream"];
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
-  const body = (await request.json()) as HandleUploadBody;
+function resolveBlobToken() {
+  const raw = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!raw) return null;
 
+  const trimmed = raw.trim();
+  // Some dashboards/env files may accidentally include wrapping quotes.
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    || (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
+export async function POST(request: Request) {
   try {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    const token = resolveBlobToken();
+    if (!token) {
       return NextResponse.json(
         { error: "Missing BLOB_READ_WRITE_TOKEN environment variable." },
         { status: 500 },
       );
     }
 
+    const body = (await request.json()) as HandleUploadBody;
+
     const jsonResponse = await handleUpload({
       body,
       request,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+      token,
       onBeforeGenerateToken: async (pathname) => {
         const session = await auth();
 
         if (!session?.user?.id) {
-          throw new Error("Unauthorized");
+          throw new Error("Unauthorized upload request");
         }
 
         if (!pathname.startsWith("listings/")) {
@@ -45,7 +62,7 @@ export async function POST(request: Request) {
     return NextResponse.json(jsonResponse);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Upload initialization failed";
-    const status = message === "Unauthorized" ? 401 : 400;
+    const status = /unauthorized/i.test(message) ? 401 : 400;
 
     console.error("Blob upload setup failed", error);
 
