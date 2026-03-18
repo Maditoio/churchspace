@@ -42,6 +42,16 @@ export function NewListingWizard() {
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
+  function preventEnterSubmit(event: React.KeyboardEvent<HTMLFormElement>) {
+    if (event.key === "Enter") {
+      const target = event.target as HTMLElement;
+      const isTextArea = target instanceof HTMLTextAreaElement;
+      if (!isTextArea) {
+        event.preventDefault();
+      }
+    }
+  }
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -151,7 +161,12 @@ export function NewListingWizard() {
         </div>
       </div>
 
-      <form noValidate onSubmit={submit} className="overflow-hidden rounded-(--radius-xl) border border-(--border-strong) bg-white/92 p-5 shadow-(--shadow-lg) backdrop-blur md:p-8">
+      <form
+        noValidate
+        onSubmit={submit}
+        onKeyDown={preventEnterSubmit}
+        className="overflow-hidden rounded-(--radius-xl) border border-(--border-strong) bg-white/92 p-5 shadow-(--shadow-lg) backdrop-blur md:p-8"
+      >
         <StepProgress step={step} />
         <div className="mt-8 rounded-(--radius-lg) bg-[linear-gradient(180deg,rgba(246,246,241,0.7),rgba(255,255,255,0.96))] p-5 md:p-7">
           {steps.map((StepComponent, index) => {

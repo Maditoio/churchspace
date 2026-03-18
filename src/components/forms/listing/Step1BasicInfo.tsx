@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/Input";
 
 const propertyTypes = [
@@ -13,6 +16,14 @@ const propertyTypes = [
 const listingTypes = ["RENT", "HIRE", "SALE", "SHARING"];
 
 export function Step1BasicInfo() {
+  const [description, setDescription] = useState("");
+  const minDescriptionLength = 100;
+  const hasMinDescription = description.trim().length >= minDescriptionLength;
+  const remainingChars = useMemo(
+    () => Math.max(0, minDescriptionLength - description.trim().length),
+    [description],
+  );
+
   return (
     <div className="space-y-4">
       <Input name="title" placeholder="Listing title" required />
@@ -32,9 +43,19 @@ export function Step1BasicInfo() {
           placeholder="Detailed property description"
           minLength={100}
           required
-          className="min-h-40 w-full rounded-[8px] border border-[var(--border)] p-3"
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          className={`min-h-40 w-full rounded-[8px] border p-3 transition-colors ${
+            hasMinDescription
+              ? "border-emerald-400 bg-emerald-50/60"
+              : "border-[var(--border)]"
+          }`}
         />
-        <p className="text-xs text-[var(--text-muted)]">Description must be at least 100 characters.</p>
+        <p className={`text-xs ${hasMinDescription ? "text-emerald-700" : "text-[var(--text-muted)]"}`}>
+          {hasMinDescription
+            ? "Great description length. You can continue editing or move to the next step."
+            : `Description must be at least 100 characters (${remainingChars} remaining).`}
+        </p>
       </div>
     </div>
   );
