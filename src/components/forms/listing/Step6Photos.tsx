@@ -10,9 +10,22 @@ type UploadedFile = { url: string; name: string };
 
 const MAX_FILES = 20;
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 90_000;
 
 function sanitizeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+function getUploadErrorMessage(error: unknown) {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "Upload timed out. Please try again with a smaller image or better connection.";
+  }
+
+  if (error instanceof Error && error.message === "Failed to fetch") {
+    return "Upload request was rejected by Vercel Blob. Please try again in a few seconds.";
+  }
+
+  return error instanceof Error ? error.message : "Upload failed";
 }
 
 export function Step6Photos() {
@@ -53,36 +66,39 @@ export function Step6Photos() {
     setUploading(true);
 
     try {
-      const uploadedFiles = await Promise.all(
-        filesToUpload.map(async (file) => {
-          const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
+      const uploadedFiles: UploadedFile[] = [];
+      const failedFiles: string[] = [];
 
-          const uploadPromise = upload(pathname, file, {
+      for (const file of filesToUpload) {
+        const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+
+        try {
+          const blob = await upload(pathname, file, {
             access: "public",
             handleUploadUrl: "/api/blob/upload",
             contentType: file.type,
+            abortSignal: controller.signal,
           });
 
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Upload timed out — please check your connection and try again.")), 30_000),
-          );
+          uploadedFiles.push({ url: blob.url, name: file.name });
+        } catch (error) {
+          failedFiles.push(file.name);
+          toast.error(`${file.name}: ${getUploadErrorMessage(error)}`);
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      }
 
-          const blob = await Promise.race([uploadPromise, timeoutPromise]);
+      if (uploadedFiles.length > 0) {
+        setFiles((prev) => [...prev, ...uploadedFiles].slice(0, MAX_FILES));
+        toast.success(`${uploadedFiles.length} photo${uploadedFiles.length > 1 ? "s" : ""} uploaded`);
+      }
 
-          return { url: blob.url, name: file.name };
-        }),
-      );
-
-      setFiles((prev) => [...prev, ...uploadedFiles].slice(0, MAX_FILES));
-      toast.success(`${uploadedFiles.length} photo${uploadedFiles.length > 1 ? "s" : ""} uploaded`);
-    } catch (error) {
-      const raw = error instanceof Error ? error.message : "Upload failed";
-      // "Failed to fetch" means the server couldn't generate an upload token (missing Blob config)
-      const message =
-        raw === "Failed to fetch"
-          ? "Upload failed: the server could not reach Vercel Blob. Check BLOB_READ_WRITE_TOKEN is set."
-          : raw;
-      toast.error(message);
+      if (failedFiles.length > 0 && uploadedFiles.length === 0) {
+        toast.error("No photos were uploaded. Please try again.");
+      }
     } finally {
       setUploading(false);
       event.target.value = "";
