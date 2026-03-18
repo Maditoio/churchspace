@@ -1,6 +1,6 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
+import { put } from "@vercel/blob/client";
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
@@ -8,12 +8,43 @@ import { toast } from "sonner";
 
 type UploadedFile = { url: string; name: string };
 
+type UploadTokenResponse = {
+  clientToken?: string;
+  error?: string;
+};
+
 const MAX_FILES = 20;
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const UPLOAD_TIMEOUT_MS = 90_000;
 
 function sanitizeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+async function getClientToken(pathname: string) {
+  const response = await fetch("/api/blob/upload", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      type: "blob.generate-client-token",
+      payload: {
+        pathname,
+        clientPayload: null,
+        multipart: false,
+      },
+    }),
+  });
+
+  const data = (await response.json().catch(() => ({}))) as UploadTokenResponse;
+
+  if (!response.ok || !data.clientToken) {
+    throw new Error(data.error || "Failed to generate upload token");
+  }
+
+  return data.clientToken;
 }
 
 function getUploadErrorMessage(error: unknown) {
@@ -75,10 +106,12 @@ export function Step6Photos() {
         const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
 
         try {
-          const blob = await upload(pathname, file, {
+          const clientToken = await getClientToken(pathname);
+
+          const blob = await put(pathname, file, {
             access: "public",
-            handleUploadUrl: "/api/blob/upload",
-            contentType: file.type,
+            token: clientToken,
+            ...(file.type ? { contentType: file.type } : {}),
             abortSignal: controller.signal,
           });
 

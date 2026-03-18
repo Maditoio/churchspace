@@ -3,14 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
-const ALLOWED_IMAGE_CONTENT_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/heic",
-  "image/heif",
-];
+const ALLOWED_IMAGE_CONTENT_TYPES = ["image/*", "application/octet-stream"];
 
 export const runtime = "nodejs";
 
