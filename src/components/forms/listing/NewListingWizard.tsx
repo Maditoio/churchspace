@@ -14,6 +14,7 @@ import { Step6Photos } from "@/components/forms/listing/Step6Photos";
 import { Step7Review } from "@/components/forms/listing/Step7Review";
 
 const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
+const PLACEHOLDER_LISTING_IMAGE_URL = "/window.svg";
 
 export function NewListingWizard() {
   const [step, setStep] = useState(1);
@@ -26,13 +27,7 @@ export function NewListingWizard() {
     const listingType = formData.getAll("listingType").map(String);
     const features = formData.getAll("features").map(String);
     const equipment = formData.getAll("equipment").map(String);
-    const primaryImageUrl = String(formData.get("primaryImageUrl") ?? "").trim();
-    const additionalImageUrls = formData
-      .getAll("imageUrls")
-      .map(String)
-      .map((value) => value.trim())
-      .filter(Boolean);
-    const imageUrls = [primaryImageUrl, ...additionalImageUrls].filter(Boolean);
+    const imageUrls = [PLACEHOLDER_LISTING_IMAGE_URL];
 
     const payload = {
       title: String(formData.get("title") ?? ""),
