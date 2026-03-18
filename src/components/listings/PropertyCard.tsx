@@ -48,7 +48,14 @@ export function PropertyCard({ listing }: PropertyCardProps) {
     <article className="group relative overflow-hidden rounded-(--radius) border border-(--border) bg-white shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--shadow-lg)]">
       <Link href={`/listings/${listing.slug}`} className="block">
         <div className="relative aspect-[16/9] overflow-hidden">
-          <Image src={firstImage} alt={firstAlt} fill className="object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+          <Image
+            src={firstImage}
+            alt={firstAlt}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            quality={60}
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[rgba(26,26,46,0.35)] to-transparent" />
           {listing.isFeatured && (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">

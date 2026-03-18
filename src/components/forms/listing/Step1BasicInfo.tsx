@@ -26,7 +26,16 @@ export function Step1BasicInfo() {
           </label>
         ))}
       </div>
-      <textarea name="description" placeholder="Detailed property description" minLength={100} className="min-h-40 w-full rounded-[8px] border border-[var(--border)] p-3" />
+      <div className="space-y-1">
+        <textarea
+          name="description"
+          placeholder="Detailed property description"
+          minLength={100}
+          required
+          className="min-h-40 w-full rounded-[8px] border border-[var(--border)] p-3"
+        />
+        <p className="text-xs text-[var(--text-muted)]">Description must be at least 100 characters.</p>
+      </div>
     </div>
   );
 }

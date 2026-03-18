@@ -14,7 +14,6 @@ import { Step6Photos } from "@/components/forms/listing/Step6Photos";
 import { Step7Review } from "@/components/forms/listing/Step7Review";
 
 const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
-const PLACEHOLDER_LISTING_IMAGE_URL = "/window.svg";
 
 type ApiErrorShape = {
   error?:
@@ -45,11 +44,24 @@ export function NewListingWizard() {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (step < 7) {
+      setStep(7);
+      toast.info("Please review your listing, then click Submit for Review.");
+      return;
+    }
+
     const formData = new FormData(event.currentTarget);
     const listingType = formData.getAll("listingType").map(String);
     const features = formData.getAll("features").map(String);
     const equipment = formData.getAll("equipment").map(String);
-    const imageUrls = [PLACEHOLDER_LISTING_IMAGE_URL];
+    const primaryImageUrl = String(formData.get("primaryImageUrl") ?? "").trim();
+    const additionalImageUrls = formData
+      .getAll("imageUrls")
+      .map(String)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const imageUrls = [primaryImageUrl, ...additionalImageUrls].filter(Boolean);
 
     const payload = {
       title: String(formData.get("title") ?? ""),
