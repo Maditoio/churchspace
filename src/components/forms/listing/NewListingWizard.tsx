@@ -16,6 +16,28 @@ import { Step7Review } from "@/components/forms/listing/Step7Review";
 const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
 const PLACEHOLDER_LISTING_IMAGE_URL = "/window.svg";
 
+type ApiErrorShape = {
+  error?:
+    | string
+    | {
+        formErrors?: string[];
+        fieldErrors?: Record<string, string[] | undefined>;
+      };
+};
+
+function getApiErrorMessage(payload: ApiErrorShape | null, fallback: string) {
+  if (!payload?.error) return fallback;
+  if (typeof payload.error === "string") return payload.error;
+
+  const firstFormError = payload.error.formErrors?.find(Boolean);
+  if (firstFormError) return firstFormError;
+
+  const firstFieldError = Object.values(payload.error.fieldErrors ?? {})
+    .flat()
+    .find(Boolean);
+  return firstFieldError ?? fallback;
+}
+
 export function NewListingWizard() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +91,8 @@ export function NewListingWizard() {
       }
 
       if (!response.ok) {
-        toast.error("Could not submit listing for review.");
+        const payload = (await response.json().catch(() => null)) as ApiErrorShape | null;
+        toast.error(getApiErrorMessage(payload, "Could not submit listing for review."));
         return;
       }
 
@@ -89,7 +112,8 @@ export function NewListingWizard() {
         });
 
         if (!imagesResponse.ok) {
-          toast.error("Listing was created, but photos could not be attached.");
+          const payload = (await imagesResponse.json().catch(() => null)) as ApiErrorShape | null;
+          toast.error(getApiErrorMessage(payload, "Listing was created, but photos could not be attached."));
           return;
         }
       }
