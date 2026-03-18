@@ -1,5 +1,6 @@
 "use client";
 
+import { put } from "@vercel/blob/client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,6 +15,12 @@ import { Step6Photos } from "@/components/forms/listing/Step6Photos";
 import { Step7Review } from "@/components/forms/listing/Step7Review";
 
 const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+type UploadTokenResponse = {
+  clientToken?: string;
+  error?: unknown;
+};
 
 type ApiErrorShape = {
   error?:
@@ -35,6 +42,72 @@ function getApiErrorMessage(payload: ApiErrorShape | null, fallback: string) {
     .flat()
     .find(Boolean);
   return firstFieldError ?? fallback;
+}
+
+function sanitizeFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+function stringifyErrorDetail(error: unknown) {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") return JSON.stringify(error);
+  return "Unknown error";
+}
+
+async function getClientToken(pathname: string) {
+  const response = await fetch("/api/blob/upload", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      type: "blob.generate-client-token",
+      payload: {
+        pathname,
+        clientPayload: null,
+        multipart: false,
+      },
+    }),
+  });
+
+  const data = (await response.json().catch(() => null)) as UploadTokenResponse | null;
+
+  if (!response.ok || !data?.clientToken) {
+    const detail = data?.error ? stringifyErrorDetail(data.error) : `HTTP ${response.status}`;
+    throw new Error(`Token generation failed: ${detail}`);
+  }
+
+  return data.clientToken;
+}
+
+async function uploadFileToBlob(file: File) {
+  const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+
+  try {
+    const clientToken = await getClientToken(pathname);
+    const blob = await put(pathname, file, {
+      access: "public",
+      token: clientToken,
+      ...(file.type ? { contentType: file.type } : {}),
+      abortSignal: controller.signal,
+    });
+
+    return blob.url;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Upload timed out after 120s");
+    }
+
+    if (error instanceof Error && error.message === "Failed to fetch") {
+      throw new Error("Blob API request failed (network/CORS or rejected upstream)");
+    }
+
+    throw new Error(stringifyErrorDetail(error));
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export function NewListingWizard() {
@@ -65,13 +138,9 @@ export function NewListingWizard() {
     const listingType = formData.getAll("listingType").map(String);
     const features = formData.getAll("features").map(String);
     const equipment = formData.getAll("equipment").map(String);
-    const primaryImageUrl = String(formData.get("primaryImageUrl") ?? "").trim();
-    const additionalImageUrls = formData
-      .getAll("imageUrls")
-      .map(String)
-      .map((value) => value.trim())
-      .filter(Boolean);
-    const imageUrls = [primaryImageUrl, ...additionalImageUrls].filter(Boolean);
+    const filesToUpload = formData
+      .getAll("listingFiles")
+      .filter((value): value is File => value instanceof File && value.size > 0);
 
     const payload = {
       title: String(formData.get("title") ?? ""),
@@ -120,6 +189,26 @@ export function NewListingWizard() {
 
       const { listing } = await response.json();
 
+      const imageUrls: string[] = [];
+      const uploadErrors: string[] = [];
+
+      if (filesToUpload.length > 0) {
+        for (const file of filesToUpload) {
+          try {
+            const uploadedUrl = await uploadFileToBlob(file);
+            imageUrls.push(uploadedUrl);
+          } catch (error) {
+            const reason = error instanceof Error ? error.message : "Unknown upload error";
+            uploadErrors.push(`${file.name}: ${reason}`);
+          }
+        }
+
+        if (uploadErrors.length > 0) {
+          const more = uploadErrors.length > 1 ? ` (+${uploadErrors.length - 1} more)` : "";
+          toast.error(`Image upload failed. ${uploadErrors[0]}${more}`);
+        }
+      }
+
       if (listing?.id && imageUrls.length > 0) {
         const imagesResponse = await fetch(`/api/listings/${listing.id}/images`, {
           method: "POST",
@@ -135,12 +224,16 @@ export function NewListingWizard() {
 
         if (!imagesResponse.ok) {
           const payload = (await imagesResponse.json().catch(() => null)) as ApiErrorShape | null;
-          toast.error(getApiErrorMessage(payload, "Listing was created, but photos could not be attached."));
+          toast.error(getApiErrorMessage(payload, "Listing was created, but uploaded photos could not be attached to this listing."));
           return;
         }
       }
 
-      toast.success("Listing submitted for review.");
+      if (uploadErrors.length > 0) {
+        toast.success("Listing submitted for review, but some images failed to upload.");
+      } else {
+        toast.success("Listing submitted for review.");
+      }
       router.push("/dashboard/listings");
       router.refresh();
     } finally {
