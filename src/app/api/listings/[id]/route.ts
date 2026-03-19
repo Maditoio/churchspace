@@ -26,7 +26,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const parsed = listingSchema.partial().safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const listing = await prisma.listing.update({ where: { id }, data: parsed.data });
+  const { images: _images, ...data } = parsed.data;
+
+  const listing = await prisma.listing.update({
+    where: { id },
+    data: {
+      ...data,
+      ...(data.availableFrom !== undefined && {
+        availableFrom: data.availableFrom ? new Date(data.availableFrom) : null,
+      }),
+      ...(data.availableTo !== undefined && {
+        availableTo: data.availableTo ? new Date(data.availableTo) : null,
+      }),
+    },
+  });
   return NextResponse.json({ listing });
 }
 
