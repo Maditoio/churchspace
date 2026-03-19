@@ -51,6 +51,7 @@ export default async function DashboardListingsPage() {
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-3">
                     <Link href={`/dashboard/listings/${listing.id}/edit`} className="text-[var(--primary)]">Edit</Link>
+                    <Link href={`/dashboard/listings/${listing.id}/photos`} className="text-[var(--primary)]">Photos</Link>
                     <ListingPaymentActions
                       listingId={listing.id}
                       isTaken={listing.isTaken}

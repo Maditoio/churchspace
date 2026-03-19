@@ -2,11 +2,19 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { X, GripVertical, Star } from "lucide-react";
 import { toast } from "sonner";
 
 const MAX_FILES = 20;
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
+
+export type ImageFileWithOrder = {
+  id: string;
+  file: File;
+  previewUrl: string;
+  order: number;
+  isPrimary: boolean;
+};
 
 type Step6PhotosProps = {
   isUploading?: boolean;
@@ -16,6 +24,7 @@ type Step6PhotosProps = {
   currentFileName?: string;
   uploadedImageUrls?: string[];
   onFilesChanged?: () => void;
+  onImageOrderChanged?: (images: ImageFileWithOrder[]) => void;
 };
 
 export function Step6Photos({
@@ -26,37 +35,95 @@ export function Step6Photos({
   currentFileName = "",
   uploadedImageUrls = [],
   onFilesChanged,
+  onImageOrderChanged,
 }: Step6PhotosProps) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<ImageFileWithOrder[]>([]);
   const pickerInputRef = useRef<HTMLInputElement>(null);
   const formInputRef = useRef<HTMLInputElement>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [draggedOver, setDraggedOver] = useState<number | null>(null);
 
   const previews = useMemo(
-    () => files.map((file) => ({ id: `${file.name}-${file.lastModified}`, file, previewUrl: URL.createObjectURL(file) })),
+    () =>
+      files.map((item, idx) => ({
+        ...item,
+        previewUrl: item.previewUrl || URL.createObjectURL(item.file),
+      })),
     [files],
   );
 
   useEffect(() => {
     return () => {
-      previews.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+      previews.forEach((item) => {
+        if (item.previewUrl && item.previewUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+      });
     };
   }, [previews]);
 
-  function syncInputFiles(nextFiles: File[]) {
+  function syncInputFiles(nextFiles: ImageFileWithOrder[]) {
     const input = formInputRef.current;
     if (!input) return;
 
     const dataTransfer = new DataTransfer();
-    nextFiles.forEach((file) => dataTransfer.items.add(file));
+    nextFiles.forEach((item) => dataTransfer.items.add(item.file));
     input.files = dataTransfer.files;
+    
+    // Notify parent about reordered files with metadata
+    onImageOrderChanged?.(nextFiles);
   }
 
   function remove(index: number) {
     const nextFiles = files.filter((_, fileIndex) => fileIndex !== index);
+    
+    // Rebuild primary: if removed was primary, make first image primary
+    if (files[index].isPrimary && nextFiles.length > 0) {
+      nextFiles[0].isPrimary = true;
+    }
+    
+    // Reset order values
+    const reordered = nextFiles.map((item, idx) => ({ ...item, order: idx }));
+    
+    setFiles(reordered);
+    syncInputFiles(reordered);
+    onFilesChanged?.();
+  }
+
+  function setAsCover(index: number) {
+    const nextFiles = files.map((item, idx) => ({
+      ...item,
+      isPrimary: idx === index,
+    }));
     setFiles(nextFiles);
     syncInputFiles(nextFiles);
-    onFilesChanged?.();
+  }
+
+  function handleDragStart(e: React.DragEvent, index: number) {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }
+
+  function handleDrop(e: React.DragEvent, targetIndex: number) {
+    e.preventDefault();
+    const sourceIndex = Number(e.dataTransfer.getData("text/plain"));
+    
+    if (sourceIndex === targetIndex || isNaN(sourceIndex)) return;
+
+    const nextFiles = [...files];
+    const [movedItem] = nextFiles.splice(sourceIndex, 1);
+    nextFiles.splice(targetIndex, 0, movedItem);
+
+    // Update order values
+    const reordered = nextFiles.map((item, idx) => ({ ...item, order: idx }));
+    
+    setFiles(reordered);
+    syncInputFiles(reordered);
   }
 
   function onSelectFiles(event: React.ChangeEvent<HTMLInputElement>) {
@@ -85,7 +152,15 @@ export function Step6Photos({
       toast.error(`Only ${remainingSlots} more photo${remainingSlots > 1 ? "s" : ""} can be added.`);
     }
 
-    const mergedFiles = [...files, ...filesToKeep].slice(0, MAX_FILES);
+    const newImages: ImageFileWithOrder[] = filesToKeep.map((file, idx) => ({
+      id: `${file.name}-${file.lastModified}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      order: files.length + idx,
+      isPrimary: files.length === 0 && idx === 0, // First image is primary
+    }));
+
+    const mergedFiles = [...files, ...newImages].slice(0, MAX_FILES);
     setFiles(mergedFiles);
     syncInputFiles(mergedFiles);
     onFilesChanged?.();
@@ -194,23 +269,68 @@ export function Step6Photos({
       {files.length > 0 && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {previews.map((item, idx) => (
-            <div key={item.id} className="relative aspect-4/3 overflow-hidden rounded-lg border border-(--border)">
+            <div
+              key={item.id}
+              draggable={!isUploading}
+              onDragStart={(e) => handleDragStart(e, idx)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragLeave={() => setDraggedOver(null)}
+              className={`relative aspect-4/3 overflow-hidden rounded-lg border transition-all ${
+                draggedOver === idx ? "border-2 border-(--accent) bg-(--surface-raised)" : "border-(--border)"
+              } ${!isUploading ? "cursor-move" : ""}`}
+            >
               <Image src={item.previewUrl} alt={item.file.name} fill className="object-cover" />
-              {idx === 0 && (
-                <span className="absolute left-1 top-1 rounded-full bg-(--accent) px-2 py-0.5 text-xs font-semibold text-(--primary)">Cover</span>
+
+              {/* Cover badge */}
+              {item.isPrimary && (
+                <div className="absolute left-1 top-1 rounded-full bg-(--accent) px-2 py-0.5 text-xs font-semibold text-(--primary) flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" /> Cover
+                </div>
               )}
+
+              {/* Upload status badge */}
               {isUploading && idx >= uploadCompletedCount && (
                 <div className="absolute inset-x-0 bottom-1 mx-1 rounded bg-black/55 px-2 py-1 text-[10px] font-semibold text-white">
                   {idx === uploadCompletedCount ? "Uploading" : "Queued"}
                 </div>
               )}
               {!isUploading && uploadTotalCount > 0 && idx < uploadCompletedCount && (
-                <div className="absolute inset-x-0 bottom-1 mx-1 rounded bg-emerald-600/85 px-2 py-1 text-[10px] font-semibold text-white">Uploaded</div>
+                <div className="absolute inset-x-0 bottom-1 mx-1 rounded bg-emerald-600/85 px-2 py-1 text-[10px] font-semibold text-white">
+                  Uploaded
+                </div>
               )}
+
+              {/* Drag handle - visible when not uploading */}
+              {!isUploading && files.length > 1 && (
+                <button
+                  type="button"
+                  className="absolute left-1 bottom-1 rounded-full bg-[rgba(0,0,0,0.55)] p-1 text-white hover:bg-[rgba(0,0,0,0.75)]"
+                  title="Drag to reorder"
+                  tabIndex={-1}
+                >
+                  <GripVertical className="h-3 w-3" />
+                </button>
+              )}
+
+              {/* Set as cover button - visible when not uploading and not already cover */}
+              {!isUploading && !item.isPrimary && (
+                <button
+                  type="button"
+                  onClick={() => setAsCover(idx)}
+                  className="absolute right-1 bottom-1 rounded-full bg-[rgba(0,0,0,0.55)] p-1.5 text-white hover:bg-[rgba(0,0,0,0.75)] transition-colors"
+                  title="Set as cover photo"
+                  aria-label="Set as cover photo"
+                >
+                  <Star className="h-3.5 w-3.5" />
+                </button>
+              )}
+
+              {/* Remove button */}
               <button
                 type="button"
                 aria-label="Remove photo"
-                className="absolute right-1 top-1 rounded-full bg-[rgba(0,0,0,0.55)] p-1 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="absolute right-1 top-1 rounded-full bg-[rgba(0,0,0,0.55)] p-1 text-white disabled:cursor-not-allowed disabled:opacity-60 hover:bg-[rgba(0,0,0,0.75)] transition-colors"
                 onClick={() => remove(idx)}
                 disabled={isUploading}
               >

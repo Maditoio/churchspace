@@ -11,7 +11,7 @@ import { Step2Location } from "@/components/forms/listing/Step2Location";
 import { Step3Details } from "@/components/forms/listing/Step3Details";
 import { Step4Equipment } from "@/components/forms/listing/Step4Equipment";
 import { Step5Pricing } from "@/components/forms/listing/Step5Pricing";
-import { Step6Photos } from "@/components/forms/listing/Step6Photos";
+import { Step6Photos, type ImageFileWithOrder } from "@/components/forms/listing/Step6Photos";
 import { Step7Review } from "@/components/forms/listing/Step7Review";
 
 const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
@@ -85,6 +85,7 @@ export function NewListingWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [imageMetadata, setImageMetadata] = useState<Map<string, ImageFileWithOrder>>(new Map());
   const [uploadedFilesSignature, setUploadedFilesSignature] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState({ total: 0, completed: 0, currentFileName: "" });
   const formRef = useRef<HTMLFormElement>(null);
@@ -103,8 +104,18 @@ export function NewListingWizard() {
       .join("|");
   }
 
+  function handleImageOrderChanged(images: ImageFileWithOrder[]) {
+    // Store the image metadata for later use during submission
+    const metadata = new Map<string, ImageFileWithOrder>();
+    images.forEach((img) => {
+      metadata.set(img.id, img);
+    });
+    setImageMetadata(metadata);
+  }
+
   function resetUploadedPhotos() {
     setUploadedImageUrls([]);
+    setImageMetadata(new Map());
     setUploadedFilesSignature(null);
     setUploadProgress({ total: 0, completed: 0, currentFileName: "" });
   }
@@ -246,12 +257,34 @@ export function NewListingWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...payload,
-          images: imageUrls.map((url, index) => ({
-            url,
-            alt: payload.title,
-            isPrimary: index === 0,
-            order: index,
-          })),
+          images: imageUrls.map((url, index) => {
+            // Try to find metadata for this image
+            // The imageMetadata map keys are based on file ID (name:lastModified)
+            // For now, use the order from metadata or fall back to index
+            let isPrimary = false;
+            let order = index;
+            
+            // Find metadata entry for this upload
+            for (const metadata of imageMetadata.values()) {
+              if (metadata.order === index) {
+                isPrimary = metadata.isPrimary;
+                order = metadata.order;
+                break;
+              }
+            }
+            
+            // If no metadata, use first image as primary
+            if (imageMetadata.size === 0) {
+              isPrimary = index === 0;
+            }
+            
+            return {
+              url,
+              alt: payload.title,
+              isPrimary,
+              order,
+            };
+          }),
         }),
       });
 
@@ -321,6 +354,7 @@ export function NewListingWizard() {
                         resetUploadedPhotos();
                       }
                     }}
+                    onImageOrderChanged={handleImageOrderChanged}
                   />
                 ) : (
                   <StepComponent />
