@@ -35,28 +35,69 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const { id } = await params;
-  const body = await request.json();
-  const images = Array.isArray(body.images) ? body.images : [];
+    const { id } = await params;
+    const body = await request.json();
+    const images = Array.isArray(body.images) ? body.images : [];
 
-  const created = await prisma.$transaction(
-    images.map((image: { url: string; alt?: string; isPrimary?: boolean; order?: number }) =>
-      prisma.listingImage.create({
-        data: {
-          listingId: id,
-          url: image.url,
-          alt: image.alt,
-          isPrimary: image.isPrimary ?? false,
-          order: image.order ?? 0,
-        },
-      }),
-    ),
-  );
+    if (images.length === 0) {
+      return NextResponse.json({ error: "No images provided" }, { status: 400 });
+    }
 
-  return NextResponse.json({ images: created }, { status: 201 });
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      select: { userId: true, status: true },
+    });
+
+    if (!listing) {
+      return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+    }
+
+    if (listing.userId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (listing.status === "PENDING_REVIEW") {
+      return NextResponse.json(
+        { error: "Cannot upload images while listing is under review" },
+        { status: 400 },
+      );
+    }
+
+    const existingCount = await prisma.listingImage.count({ where: { listingId: id } });
+
+    const created = await prisma.$transaction(
+      images.map((image: { url: string; alt?: string; isPrimary?: boolean; order?: number }, index: number) =>
+        prisma.listingImage.create({
+          data: {
+            listingId: id,
+            url: image.url,
+            alt: image.alt,
+            isPrimary: image.isPrimary ?? false,
+            order: image.order ?? existingCount + index,
+          },
+        }),
+      ),
+    );
+
+    const updatedImages = await prisma.listingImage.findMany({
+      where: { listingId: id },
+      orderBy: { order: "asc" },
+    });
+
+    return NextResponse.json({ images: updatedImages, created }, { status: 201 });
+  } catch (error) {
+    console.error("Failed to upload listing images:", error);
+    return NextResponse.json(
+      { error: "Failed to upload listing images" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

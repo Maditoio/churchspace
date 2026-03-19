@@ -104,13 +104,15 @@ export function Step6Photos({
     e.dataTransfer.setData("text/plain", String(index));
   }
 
-  function handleDragOver(e: React.DragEvent) {
+  function handleDragOver(e: React.DragEvent, targetIndex: number) {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    setDraggedOver(targetIndex);
   }
 
   function handleDrop(e: React.DragEvent, targetIndex: number) {
     e.preventDefault();
+    setDraggedOver(null);
     const sourceIndex = Number(e.dataTransfer.getData("text/plain"));
     
     if (sourceIndex === targetIndex || isNaN(sourceIndex)) return;
@@ -273,7 +275,7 @@ export function Step6Photos({
               key={item.id}
               draggable={!isUploading}
               onDragStart={(e) => handleDragStart(e, idx)}
-              onDragOver={handleDragOver}
+              onDragOver={(e) => handleDragOver(e, idx)}
               onDrop={(e) => handleDrop(e, idx)}
               onDragLeave={() => setDraggedOver(null)}
               className={`relative aspect-4/3 overflow-hidden rounded-lg border transition-all ${

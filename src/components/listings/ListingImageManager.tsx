@@ -1,9 +1,37 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { X, GripVertical, Star, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
+const MAX_FILES = 20;
+const MAX_FILE_SIZE = 8 * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+function sanitizeFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+async function uploadFileToBlob(file: File) {
+  const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+
+  try {
+    const blob = await upload(pathname, file, {
+      access: "public",
+      handleUploadUrl: "/api/blob/upload",
+      ...(file.type ? { contentType: file.type } : {}),
+      multipart: file.size > 5 * 1024 * 1024,
+      abortSignal: controller.signal,
+    });
+    return blob.url;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 type ListingImage = {
   id: string;
@@ -27,6 +55,7 @@ export function ListingImageManager({
   const [images, setImages] = useState<ListingImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [draggedOver, setDraggedOver] = useState<number | null>(null);
   const isReadOnly = listingStatus === "PENDING_REVIEW";
 
@@ -108,6 +137,65 @@ export function ListingImageManager({
     }
   }
 
+  async function uploadMorePhotos(event: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files ?? []);
+    if (!selectedFiles.length || isReadOnly) return;
+
+    const remainingSlots = MAX_FILES - images.length;
+    if (remainingSlots <= 0) {
+      toast.error(`You can upload up to ${MAX_FILES} photos.`);
+      event.target.value = "";
+      return;
+    }
+
+    const oversized = selectedFiles.find((file) => file.size > MAX_FILE_SIZE);
+    if (oversized) {
+      toast.error(`${oversized.name} is larger than 8MB.`);
+      event.target.value = "";
+      return;
+    }
+
+    const filesToUpload = selectedFiles.slice(0, remainingSlots);
+
+    try {
+      setUploading(true);
+      const uploadedUrls: string[] = [];
+
+      for (const file of filesToUpload) {
+        const url = await uploadFileToBlob(file);
+        uploadedUrls.push(url);
+      }
+
+      const response = await fetch(`/api/listings/${listingId}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          images: uploadedUrls.map((url, index) => ({
+            url,
+            alt: `Listing image ${images.length + index + 1}`,
+            isPrimary: images.length === 0 && index === 0,
+            order: images.length + index,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.error ?? "Failed to save uploaded photos");
+      }
+
+      const data = await response.json();
+      setImages(data.images || []);
+      onImageCountChange?.(data.images?.length || 0);
+      toast.success(`${filesToUpload.length} photo${filesToUpload.length > 1 ? "s" : ""} uploaded`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload photos");
+    } finally {
+      event.target.value = "";
+      setUploading(false);
+    }
+  }
+
   async function reorderImages(sourceIndex: number, targetIndex: number) {
     if (sourceIndex === targetIndex || isReadOnly) return;
 
@@ -151,15 +239,17 @@ export function ListingImageManager({
     e.dataTransfer.setData("text/plain", String(index));
   }
 
-  function handleDragOver(e: React.DragEvent) {
+  function handleDragOver(e: React.DragEvent, targetIndex: number) {
     if (isReadOnly) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+    setDraggedOver(targetIndex);
   }
 
   function handleDrop(e: React.DragEvent, targetIndex: number) {
     if (isReadOnly) return;
     e.preventDefault();
+    setDraggedOver(null);
     const sourceIndex = Number(e.dataTransfer.getData("text/plain"));
     if (!isNaN(sourceIndex)) {
       reorderImages(sourceIndex, targetIndex);
@@ -174,21 +264,38 @@ export function ListingImageManager({
     );
   }
 
-  if (images.length === 0) {
-    return (
-      <div className="rounded-(--radius) border border-(--border) bg-white px-4 py-6 text-center">
-        <p className="text-sm text-(--text-muted)">No photos uploaded yet</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {isReadOnly && (
         <div className="rounded-(--radius) border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          &⏳ Image editing is disabled while this listing is under review. Changes will be available once it&apos;s approved.
+          Image editing is disabled while this listing is under review. Changes will be available once it&apos;s approved.
         </div>
       )}
+
+      {!isReadOnly && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-(--text-muted)">
+            {images.length} / {MAX_FILES} photos
+          </p>
+          <label className="inline-flex cursor-pointer items-center rounded-[10px] bg-(--primary) px-4 py-2 text-sm font-medium text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60">
+            {uploading ? "Uploading..." : "Upload photos"}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              disabled={uploading || updating || images.length >= MAX_FILES}
+              onChange={uploadMorePhotos}
+            />
+          </label>
+        </div>
+      )}
+
+      {images.length === 0 ? (
+        <div className="rounded-(--radius) border border-(--border) bg-white px-4 py-6 text-center">
+          <p className="text-sm text-(--text-muted)">No photos uploaded yet</p>
+        </div>
+      ) : (
 
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
         {images.map((image, idx) => (
@@ -196,7 +303,7 @@ export function ListingImageManager({
             key={image.id}
             draggable={!isReadOnly}
             onDragStart={(e) => handleDragStart(e, idx)}
-            onDragOver={handleDragOver}
+            onDragOver={(e) => handleDragOver(e, idx)}
             onDrop={(e) => handleDrop(e, idx)}
             onDragLeave={() => setDraggedOver(null)}
             className={`relative aspect-square overflow-hidden rounded-lg border transition-all ${
@@ -252,6 +359,7 @@ export function ListingImageManager({
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
