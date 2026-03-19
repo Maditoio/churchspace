@@ -30,6 +30,7 @@ export function Step6Photos({
   const [files, setFiles] = useState<File[]>([]);
   const pickerInputRef = useRef<HTMLInputElement>(null);
   const formInputRef = useRef<HTMLInputElement>(null);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const previews = useMemo(
     () => files.map((file) => ({ id: `${file.name}-${file.lastModified}`, file, previewUrl: URL.createObjectURL(file) })),
@@ -93,10 +94,45 @@ export function Step6Photos({
     toast.success(`${filesToKeep.length} photo${filesToKeep.length > 1 ? "s" : ""} added. Upload starts when you continue.`);
   }
 
+  async function copyUrl(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(url);
+      toast.success("URL copied");
+      window.setTimeout(() => setCopiedUrl(null), 1500);
+    } catch {
+      toast.error("Could not copy URL");
+    }
+  }
+
   return (
-    <div className="space-y-4">
-      <p className="text-sm font-medium text-foreground">Select listing photos and upload them before your final review step.</p>
-      <div className="rounded-(--radius) border border-dashed border-(--border) bg-(--surface-raised) p-8 text-center">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--accent-strong)">Step 6 • Media Upload</p>
+          <p className="mt-1 text-sm font-medium text-foreground">Upload photos now, then finish details on the review step.</p>
+        </div>
+        <div className="rounded-full border border-(--border) bg-white px-3 py-1 text-xs font-semibold text-(--text-secondary)">
+          {files.length} / {MAX_FILES} Selected
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">Capacity</p>
+          <p className="mt-1 text-lg font-semibold text-(--primary)">{MAX_FILES} photos max</p>
+        </div>
+        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">Size Limit</p>
+          <p className="mt-1 text-lg font-semibold text-(--primary)">8MB each</p>
+        </div>
+        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">Status</p>
+          <p className="mt-1 text-lg font-semibold text-(--primary)">{isUploading ? "Uploading" : uploadedImageUrls.length > 0 ? "Ready" : "Pending"}</p>
+        </div>
+      </div>
+
+      <div className="rounded-(--radius) border border-dashed border-(--border) bg-[radial-gradient(circle_at_top,rgba(206,138,60,0.10),transparent_65%),var(--surface-raised)] p-8 text-center">
         <input
           ref={pickerInputRef}
           type="file"
@@ -114,13 +150,13 @@ export function Step6Photos({
         >
           {files.length >= MAX_FILES ? "Photo Limit Reached" : "Choose Photos"}
         </button>
-        <p className="mt-2 text-xs text-(--text-muted)">PNG, JPG, WEBP up to 8MB each. Maximum 20 photos.</p>
+        <p className="mt-2 text-xs text-(--text-muted)">PNG, JPG, WEBP up to 8MB each. Upload begins when you click "Upload Photos & Continue".</p>
       </div>
 
       {uploadTotalCount > 0 && (
-        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
+        <div className="rounded-(--radius) border border-(--border) bg-white p-4">
           <div className="flex items-center justify-between text-xs text-(--text-secondary)">
-            <span>{isUploading ? `Uploading photos (${uploadCompletedCount}/${uploadTotalCount})` : `Upload complete (${uploadCompletedCount}/${uploadTotalCount})`}</span>
+            <span className="font-semibold">{isUploading ? `Uploading photos (${uploadCompletedCount}/${uploadTotalCount})` : `Upload complete (${uploadCompletedCount}/${uploadTotalCount})`}</span>
             <span>{uploadPercentage}%</span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-(--border)">
@@ -131,19 +167,24 @@ export function Step6Photos({
       )}
 
       {uploadedImageUrls.length > 0 && (
-        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
+        <div className="rounded-(--radius) border border-(--border) bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)">Uploaded Image URLs</p>
           <div className="mt-3 space-y-2">
             {uploadedImageUrls.map((url, index) => (
-              <a
-                key={url}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="block truncate text-xs text-(--primary) underline"
-              >
-                {index + 1}. {url}
-              </a>
+              <div key={url} className="rounded-lg border border-(--border) bg-(--surface-raised) px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <a href={url} target="_blank" rel="noreferrer" className="truncate text-xs text-(--primary) underline">
+                    {index + 1}. {url}
+                  </a>
+                  <button
+                    type="button"
+                    className="rounded-md border border-(--border) px-2 py-1 text-[11px] font-medium text-(--text-secondary) hover:bg-white"
+                    onClick={() => copyUrl(url)}
+                  >
+                    {copiedUrl === url ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
           <p className="mt-2 text-xs text-(--text-muted)">These URLs will be stored in the ListingImage table when the listing is submitted.</p>
@@ -158,6 +199,14 @@ export function Step6Photos({
               {idx === 0 && (
                 <span className="absolute left-1 top-1 rounded-full bg-(--accent) px-2 py-0.5 text-xs font-semibold text-(--primary)">Cover</span>
               )}
+              {isUploading && idx >= uploadCompletedCount && (
+                <div className="absolute inset-x-0 bottom-1 mx-1 rounded bg-black/55 px-2 py-1 text-[10px] font-semibold text-white">
+                  {idx === uploadCompletedCount ? "Uploading" : "Queued"}
+                </div>
+              )}
+              {!isUploading && uploadTotalCount > 0 && idx < uploadCompletedCount && (
+                <div className="absolute inset-x-0 bottom-1 mx-1 rounded bg-emerald-600/85 px-2 py-1 text-[10px] font-semibold text-white">Uploaded</div>
+              )}
               <button
                 type="button"
                 aria-label="Remove photo"
@@ -169,6 +218,12 @@ export function Step6Photos({
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {files.length === 0 && (
+        <div className="rounded-(--radius) border border-(--border) bg-white px-4 py-3 text-xs text-(--text-muted)">
+          No photos selected yet. Add images to unlock upload and continue.
         </div>
       )}
     </div>

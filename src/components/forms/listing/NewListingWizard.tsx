@@ -329,7 +329,7 @@ export function NewListingWizard() {
             );
           })}
         </div>
-        {uploadProgress.total > 0 && (
+        {uploadProgress.total > 0 && step !== 6 && (
           <div className="mt-6 rounded-(--radius) border border-(--border) bg-(--surface-raised) px-4 py-3">
             <div className="flex items-center justify-between text-xs font-medium text-(--text-secondary)">
               <span>
