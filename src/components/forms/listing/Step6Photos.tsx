@@ -8,7 +8,23 @@ import { toast } from "sonner";
 const MAX_FILES = 20;
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 
-export function Step6Photos() {
+type Step6PhotosProps = {
+  isUploading?: boolean;
+  uploadCompletedCount?: number;
+  uploadTotalCount?: number;
+  uploadPercentage?: number;
+  currentFileName?: string;
+  onFilesChanged?: () => void;
+};
+
+export function Step6Photos({
+  isUploading = false,
+  uploadCompletedCount = 0,
+  uploadTotalCount = 0,
+  uploadPercentage = 0,
+  currentFileName = "",
+  onFilesChanged,
+}: Step6PhotosProps) {
   const [files, setFiles] = useState<File[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -36,6 +52,7 @@ export function Step6Photos() {
     const nextFiles = files.filter((_, fileIndex) => fileIndex !== index);
     setFiles(nextFiles);
     syncInputFiles(nextFiles);
+    onFilesChanged?.();
   }
 
   function onSelectFiles(event: React.ChangeEvent<HTMLInputElement>) {
@@ -67,14 +84,15 @@ export function Step6Photos() {
     const mergedFiles = [...files, ...filesToKeep].slice(0, MAX_FILES);
     setFiles(mergedFiles);
     syncInputFiles(mergedFiles);
+    onFilesChanged?.();
     event.target.value = "";
 
-    toast.success(`${filesToKeep.length} photo${filesToKeep.length > 1 ? "s" : ""} ready for upload on submit`);
+    toast.success(`${filesToKeep.length} photo${filesToKeep.length > 1 ? "s" : ""} added. Upload starts when you continue.`);
   }
 
   return (
     <div className="space-y-4">
-      <p className="text-sm font-medium text-foreground">Select listing photos (upload happens after you click Submit)</p>
+      <p className="text-sm font-medium text-foreground">Select listing photos and upload them before your final review step.</p>
       <div className="rounded-(--radius) border border-dashed border-(--border) bg-(--surface-raised) p-8 text-center">
         <input
           ref={inputRef}
@@ -87,14 +105,27 @@ export function Step6Photos() {
         />
         <button
           type="button"
-          className="h-11 rounded-[10px] bg-[var(--primary)] px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-11 rounded-[10px] bg-(--primary) px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
           onClick={() => inputRef.current?.click()}
-          disabled={files.length >= MAX_FILES}
+          disabled={files.length >= MAX_FILES || isUploading}
         >
           {files.length >= MAX_FILES ? "Photo Limit Reached" : "Choose Photos"}
         </button>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">PNG, JPG, WEBP up to 8MB each. Maximum 20 photos. Upload starts only after final submit.</p>
+        <p className="mt-2 text-xs text-(--text-muted)">PNG, JPG, WEBP up to 8MB each. Maximum 20 photos.</p>
       </div>
+
+      {uploadTotalCount > 0 && (
+        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
+          <div className="flex items-center justify-between text-xs text-(--text-secondary)">
+            <span>{isUploading ? `Uploading photos (${uploadCompletedCount}/${uploadTotalCount})` : `Upload complete (${uploadCompletedCount}/${uploadTotalCount})`}</span>
+            <span>{uploadPercentage}%</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-(--border)">
+            <div className="h-full rounded-full bg-(--accent) transition-all duration-300" style={{ width: `${uploadPercentage}%` }} />
+          </div>
+          {isUploading && currentFileName && <p className="mt-2 truncate text-xs text-(--text-muted)">Uploading {currentFileName}</p>}
+        </div>
+      )}
 
       {files.length > 0 && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -107,8 +138,9 @@ export function Step6Photos() {
               <button
                 type="button"
                 aria-label="Remove photo"
-                className="absolute right-1 top-1 rounded-full bg-[rgba(0,0,0,0.55)] p-1 text-white"
+                className="absolute right-1 top-1 rounded-full bg-[rgba(0,0,0,0.55)] p-1 text-white disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => remove(idx)}
+                disabled={isUploading}
               >
                 <X className="h-3 w-3" />
               </button>

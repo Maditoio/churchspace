@@ -83,8 +83,92 @@ async function uploadFileToBlob(file: File) {
 export function NewListingWizard() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [uploadedFilesSignature, setUploadedFilesSignature] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState({ total: 0, completed: 0, currentFileName: "" });
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+
+  function getSelectedFiles(form: HTMLFormElement) {
+    const formData = new FormData(form);
+    return formData
+      .getAll("listingFiles")
+      .filter((value): value is File => value instanceof File && value.size > 0);
+  }
+
+  function buildFilesSignature(files: File[]) {
+    return files
+      .map((file) => `${file.name}:${file.size}:${file.lastModified}`)
+      .join("|");
+  }
+
+  function resetUploadedPhotos() {
+    setUploadedImageUrls([]);
+    setUploadedFilesSignature(null);
+    setUploadProgress({ total: 0, completed: 0, currentFileName: "" });
+  }
+
+  async function uploadPhotosForReview() {
+    const form = formRef.current;
+    if (!form) return null;
+
+    const filesToUpload = getSelectedFiles(form);
+    if (filesToUpload.length === 0) {
+      resetUploadedPhotos();
+      return [];
+    }
+
+    const nextSignature = buildFilesSignature(filesToUpload);
+    if (uploadedFilesSignature === nextSignature && uploadedImageUrls.length === filesToUpload.length) {
+      return uploadedImageUrls;
+    }
+
+    setUploadingPhotos(true);
+    setUploadProgress({ total: filesToUpload.length, completed: 0, currentFileName: "" });
+
+    try {
+      const imageUrls: string[] = [];
+      const uploadErrors: string[] = [];
+
+      for (const [index, file] of filesToUpload.entries()) {
+        setUploadProgress({ total: filesToUpload.length, completed: index, currentFileName: file.name });
+        try {
+          const uploadedUrl = await uploadFileToBlob(file);
+          imageUrls.push(uploadedUrl);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : "Unknown upload error";
+          uploadErrors.push(`${file.name}: ${reason}`);
+        }
+      }
+
+      if (uploadErrors.length > 0) {
+        const more = uploadErrors.length > 1 ? ` (+${uploadErrors.length - 1} more)` : "";
+        toast.error(`Image upload failed. ${uploadErrors[0]}${more}`);
+        return null;
+      }
+
+      setUploadedImageUrls(imageUrls);
+      setUploadedFilesSignature(nextSignature);
+      setUploadProgress({ total: filesToUpload.length, completed: filesToUpload.length, currentFileName: "" });
+      toast.success(`${filesToUpload.length} photo${filesToUpload.length > 1 ? "s" : ""} uploaded. Continue to review.`);
+      return imageUrls;
+    } finally {
+      setUploadingPhotos(false);
+    }
+  }
+
+  async function handleNextStep() {
+    if (step === 6) {
+      const uploaded = await uploadPhotosForReview();
+      if (uploaded) {
+        setStep(7);
+      }
+      return;
+    }
+
+    setStep((prev) => Math.min(7, prev + 1));
+  }
 
   function preventEnterSubmit(event: React.KeyboardEvent<HTMLFormElement>) {
     if (event.key === "Enter") {
@@ -97,10 +181,7 @@ export function NewListingWizard() {
   }
 
   async function handleSubmitClick() {
-    if (step !== 7) {
-      setStep(7);
-      return;
-    }
+    if (step !== 7) return;
 
     const form = formRef.current;
     if (!form) return;
@@ -115,9 +196,7 @@ export function NewListingWizard() {
     const listingType = formData.getAll("listingType").map(String);
     const features = formData.getAll("features").map(String);
     const equipment = formData.getAll("equipment").map(String);
-    const filesToUpload = formData
-      .getAll("listingFiles")
-      .filter((value): value is File => value instanceof File && value.size > 0);
+    const filesToUpload = getSelectedFiles(form);
 
     const payload = {
       title: String(formData.get("title") ?? ""),
@@ -146,25 +225,17 @@ export function NewListingWizard() {
 
     setSubmitting(true);
     try {
-      const imageUrls: string[] = [];
-      const uploadErrors: string[] = [];
+      const fileSignature = buildFilesSignature(filesToUpload);
+      const hasPreparedUploads = filesToUpload.length === 0 || (uploadedFilesSignature === fileSignature && uploadedImageUrls.length === filesToUpload.length);
 
-      if (filesToUpload.length > 0) {
-        for (const file of filesToUpload) {
-          try {
-            const uploadedUrl = await uploadFileToBlob(file);
-            imageUrls.push(uploadedUrl);
-          } catch (error) {
-            const reason = error instanceof Error ? error.message : "Unknown upload error";
-            uploadErrors.push(`${file.name}: ${reason}`);
-          }
-        }
-
-        if (uploadErrors.length > 0) {
-          const more = uploadErrors.length > 1 ? ` (+${uploadErrors.length - 1} more)` : "";
-          toast.error(`Image upload failed. ${uploadErrors[0]}${more}`);
+      let imageUrls = uploadedImageUrls;
+      if (!hasPreparedUploads) {
+        const uploaded = await uploadPhotosForReview();
+        if (!uploaded) {
+          setStep(6);
           return;
         }
+        imageUrls = uploaded;
       }
 
       const response = await fetch("/api/listings", {
@@ -234,10 +305,10 @@ export function NewListingWizard() {
         noValidate
         onSubmit={(event) => event.preventDefault()}
         onKeyDown={preventEnterSubmit}
-        className="overflow-hidden rounded-(--radius-xl) border border-(--border-strong) bg-white/92 p-5 shadow-(--shadow-lg) backdrop-blur md:p-8"
+        className="overflow-hidden rounded-xl border border-(--border-strong) bg-white/92 p-5 shadow-(--shadow-lg) backdrop-blur md:p-8"
       >
         <StepProgress step={step} />
-        <div className="mt-8 rounded-(--radius-lg) bg-[linear-gradient(180deg,rgba(246,246,241,0.7),rgba(255,255,255,0.96))] p-5 md:p-7">
+        <div className="mt-8 rounded-lg bg-[linear-gradient(180deg,rgba(246,246,241,0.7),rgba(255,255,255,0.96))] p-5 md:p-7">
           {steps.map((StepComponent, index) => {
             const currentStep = index + 1;
             return (
@@ -246,22 +317,67 @@ export function NewListingWizard() {
                 className={currentStep === step ? "block" : "hidden"}
                 aria-hidden={currentStep === step ? undefined : true}
               >
-                <StepComponent />
+                {currentStep === 6 ? (
+                  <Step6Photos
+                    isUploading={uploadingPhotos}
+                    uploadCompletedCount={uploadProgress.completed}
+                    uploadTotalCount={uploadProgress.total}
+                    uploadPercentage={uploadProgress.total > 0 ? Math.round((uploadProgress.completed / uploadProgress.total) * 100) : 0}
+                    currentFileName={uploadProgress.currentFileName}
+                    onFilesChanged={() => {
+                      if (uploadedImageUrls.length > 0 || uploadedFilesSignature) {
+                        resetUploadedPhotos();
+                      }
+                    }}
+                  />
+                ) : (
+                  <StepComponent />
+                )}
               </div>
             );
           })}
         </div>
+        {uploadProgress.total > 0 && (
+          <div className="mt-6 rounded-(--radius) border border-(--border) bg-(--surface-raised) px-4 py-3">
+            <div className="flex items-center justify-between text-xs font-medium text-(--text-secondary)">
+              <span>
+                {uploadingPhotos
+                  ? `Uploading photos (${uploadProgress.completed}/${uploadProgress.total})`
+                  : `Photos uploaded (${uploadProgress.completed}/${uploadProgress.total})`}
+              </span>
+              <span>{Math.round((uploadProgress.completed / uploadProgress.total) * 100)}%</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-(--border)">
+              <div
+                className="h-full rounded-full bg-(--accent) transition-all duration-300"
+                style={{ width: `${Math.round((uploadProgress.completed / uploadProgress.total) * 100)}%` }}
+              />
+            </div>
+            {uploadingPhotos && uploadProgress.currentFileName && (
+              <p className="mt-2 truncate text-xs text-(--text-muted)">Uploading {uploadProgress.currentFileName}</p>
+            )}
+          </div>
+        )}
         <div className="mt-8 flex items-center justify-between gap-3 border-t border-(--border) pt-6">
-          <Button type="button" variant="secondary" onClick={() => setStep((prev) => Math.max(1, prev - 1))}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setStep((prev) => Math.max(1, prev - 1))}
+            disabled={submitting || uploadingPhotos}
+          >
             Back
           </Button>
           {step < 7 ? (
-            <Button type="button" variant="accent" onClick={() => setStep((prev) => Math.min(7, prev + 1))}>
-              Next Step
+            <Button type="button" variant="accent" onClick={handleNextStep} disabled={submitting || uploadingPhotos}>
+              {step === 6
+                ? uploadingPhotos
+                  ? `Uploading ${uploadProgress.completed}/${uploadProgress.total}...`
+                  : "Upload Photos & Continue"
+                : "Next Step"}
             </Button>
           ) : (
-            <Button type="button" onClick={handleSubmitClick} disabled={submitting}>
-              {submitting ? "Submitting..." : "Submit for Review"}
+            <Button type="button" onClick={handleSubmitClick} disabled={submitting || uploadingPhotos}>
+              {submitting ? "Submitting listing..." : "Submit for Review"}
             </Button>
           )}
         </div>
