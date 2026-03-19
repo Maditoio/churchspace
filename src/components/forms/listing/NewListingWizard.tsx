@@ -1,6 +1,6 @@
 "use client";
 
-import { put } from "@vercel/blob/client";
+import { upload } from "@vercel/blob/client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -17,10 +17,7 @@ import { Step7Review } from "@/components/forms/listing/Step7Review";
 const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
 const UPLOAD_TIMEOUT_MS = 120_000;
 
-type UploadTokenResponse = {
-  clientToken?: string;
-  error?: unknown;
-};
+const SUBMIT_BUTTON_NAME = "submit-listing";
 
 type ApiErrorShape = {
   error?:
@@ -55,42 +52,25 @@ function stringifyErrorDetail(error: unknown) {
   return "Unknown error";
 }
 
-async function getClientToken(pathname: string) {
-  const response = await fetch("/api/blob/upload", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      type: "blob.generate-client-token",
-      payload: {
-        pathname,
-        clientPayload: null,
-        multipart: false,
-      },
-    }),
-  });
+function getSubmitterName(event: React.FormEvent<HTMLFormElement>) {
+  const nativeEvent = event.nativeEvent as SubmitEvent;
+  const submitter = nativeEvent.submitter;
 
-  const data = (await response.json().catch(() => null)) as UploadTokenResponse | null;
-
-  if (!response.ok || !data?.clientToken) {
-    const detail = data?.error ? stringifyErrorDetail(data.error) : `HTTP ${response.status}`;
-    throw new Error(`Token generation failed: ${detail}`);
-  }
-
-  return data.clientToken;
+  return submitter instanceof HTMLButtonElement ? submitter.name : "";
 }
 
-async function uploadFileToBlob(file: File) {
+async function uploadFileToBlob(file: File, payload: { listingId: string; order: number; alt: string }) {
   const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
 
   try {
-    const clientToken = await getClientToken(pathname);
-    const blob = await put(pathname, file, {
+    const blob = await upload(pathname, file, {
       access: "public",
-      token: clientToken,
+      handleUploadUrl: "/api/blob/upload",
+      clientPayload: JSON.stringify(payload),
       ...(file.type ? { contentType: file.type } : {}),
+      multipart: file.size > 5 * 1024 * 1024,
       abortSignal: controller.signal,
     });
 
@@ -127,6 +107,10 @@ export function NewListingWizard() {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (getSubmitterName(event) !== SUBMIT_BUTTON_NAME) {
+      return;
+    }
 
     if (step < 7) {
       setStep(7);
@@ -193,9 +177,13 @@ export function NewListingWizard() {
       const uploadErrors: string[] = [];
 
       if (filesToUpload.length > 0) {
-        for (const file of filesToUpload) {
+        for (const [index, file] of filesToUpload.entries()) {
           try {
-            const uploadedUrl = await uploadFileToBlob(file);
+            const uploadedUrl = await uploadFileToBlob(file, {
+              listingId: listing.id,
+              order: index,
+              alt: payload.title,
+            });
             imageUrls.push(uploadedUrl);
           } catch (error) {
             const reason = error instanceof Error ? error.message : "Unknown upload error";
@@ -206,26 +194,6 @@ export function NewListingWizard() {
         if (uploadErrors.length > 0) {
           const more = uploadErrors.length > 1 ? ` (+${uploadErrors.length - 1} more)` : "";
           toast.error(`Image upload failed. ${uploadErrors[0]}${more}`);
-        }
-      }
-
-      if (listing?.id && imageUrls.length > 0) {
-        const imagesResponse = await fetch(`/api/listings/${listing.id}/images`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            images: imageUrls.map((url, index) => ({
-              url,
-              isPrimary: index === 0,
-              order: index,
-            })),
-          }),
-        });
-
-        if (!imagesResponse.ok) {
-          const payload = (await imagesResponse.json().catch(() => null)) as ApiErrorShape | null;
-          toast.error(getApiErrorMessage(payload, "Listing was created, but uploaded photos could not be attached to this listing."));
-          return;
         }
       }
 
@@ -284,7 +252,7 @@ export function NewListingWizard() {
               Next Step
             </Button>
           ) : (
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" name={SUBMIT_BUTTON_NAME} disabled={submitting}>
               {submitting ? "Submitting..." : "Submit for Review"}
             </Button>
           )}

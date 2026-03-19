@@ -34,7 +34,7 @@ export function PropertyCard({ listing }: PropertyCardProps) {
     }
   }
 
-  const firstImage = listing.images[0]?.url ?? "https://picsum.photos/seed/churchspace-fallback/1200/800";
+  const firstImage = listing.images[0]?.url;
   const firstAlt = listing.images[0]?.alt ?? listing.title;
   const price = listing.salePrice
     ? formatPrice(listing.salePrice)
@@ -48,14 +48,23 @@ export function PropertyCard({ listing }: PropertyCardProps) {
     <article className="group relative overflow-hidden rounded-(--radius) border border-(--border) bg-white shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--shadow-lg)]">
       <Link href={`/listings/${listing.slug}`} className="block">
         <div className="relative aspect-[16/9] overflow-hidden">
-          <Image
-            src={firstImage}
-            alt={firstAlt}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-            quality={60}
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-          />
+          {firstImage ? (
+            <Image
+              src={firstImage}
+              alt={firstAlt}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+              quality={60}
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+          ) : (
+            <div className="flex h-full w-full items-end bg-[linear-gradient(135deg,var(--primary-soft),#f4efe4)] p-4 text-left">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-secondary)]">No Photo Yet</p>
+                <p className="mt-2 line-clamp-2 text-lg font-semibold text-[var(--text-primary)]">{listing.title}</p>
+              </div>
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[rgba(26,26,46,0.35)] to-transparent" />
           {listing.isFeatured && (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
