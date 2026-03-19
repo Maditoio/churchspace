@@ -14,6 +14,7 @@ type Step6PhotosProps = {
   uploadTotalCount?: number;
   uploadPercentage?: number;
   currentFileName?: string;
+  uploadedImageUrls?: string[];
   onFilesChanged?: () => void;
 };
 
@@ -23,10 +24,12 @@ export function Step6Photos({
   uploadTotalCount = 0,
   uploadPercentage = 0,
   currentFileName = "",
+  uploadedImageUrls = [],
   onFilesChanged,
 }: Step6PhotosProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const pickerInputRef = useRef<HTMLInputElement>(null);
+  const formInputRef = useRef<HTMLInputElement>(null);
 
   const previews = useMemo(
     () => files.map((file) => ({ id: `${file.name}-${file.lastModified}`, file, previewUrl: URL.createObjectURL(file) })),
@@ -40,7 +43,7 @@ export function Step6Photos({
   }, [previews]);
 
   function syncInputFiles(nextFiles: File[]) {
-    const input = inputRef.current;
+    const input = formInputRef.current;
     if (!input) return;
 
     const dataTransfer = new DataTransfer();
@@ -95,18 +98,18 @@ export function Step6Photos({
       <p className="text-sm font-medium text-foreground">Select listing photos and upload them before your final review step.</p>
       <div className="rounded-(--radius) border border-dashed border-(--border) bg-(--surface-raised) p-8 text-center">
         <input
-          ref={inputRef}
+          ref={pickerInputRef}
           type="file"
-          name="listingFiles"
           accept="image/*"
           multiple
           className="hidden"
           onChange={onSelectFiles}
         />
+        <input ref={formInputRef} type="file" name="listingFiles" multiple className="hidden" tabIndex={-1} aria-hidden />
         <button
           type="button"
           className="h-11 rounded-[10px] bg-(--primary) px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => pickerInputRef.current?.click()}
           disabled={files.length >= MAX_FILES || isUploading}
         >
           {files.length >= MAX_FILES ? "Photo Limit Reached" : "Choose Photos"}
@@ -124,6 +127,26 @@ export function Step6Photos({
             <div className="h-full rounded-full bg-(--accent) transition-all duration-300" style={{ width: `${uploadPercentage}%` }} />
           </div>
           {isUploading && currentFileName && <p className="mt-2 truncate text-xs text-(--text-muted)">Uploading {currentFileName}</p>}
+        </div>
+      )}
+
+      {uploadedImageUrls.length > 0 && (
+        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--text-muted)">Uploaded Image URLs</p>
+          <div className="mt-3 space-y-2">
+            {uploadedImageUrls.map((url, index) => (
+              <a
+                key={url}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="block truncate text-xs text-(--primary) underline"
+              >
+                {index + 1}. {url}
+              </a>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-(--text-muted)">These URLs will be stored in the ListingImage table when the listing is submitted.</p>
         </div>
       )}
 

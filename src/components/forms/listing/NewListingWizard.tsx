@@ -125,6 +125,8 @@ export function NewListingWizard() {
     }
 
     setUploadingPhotos(true);
+    setUploadedImageUrls([]);
+    setUploadedFilesSignature(null);
     setUploadProgress({ total: filesToUpload.length, completed: 0, currentFileName: "" });
 
     try {
@@ -136,6 +138,7 @@ export function NewListingWizard() {
         try {
           const uploadedUrl = await uploadFileToBlob(file);
           imageUrls.push(uploadedUrl);
+          setUploadProgress({ total: filesToUpload.length, completed: index + 1, currentFileName: file.name });
         } catch (error) {
           const reason = error instanceof Error ? error.message : "Unknown upload error";
           uploadErrors.push(`${file.name}: ${reason}`);
@@ -312,6 +315,7 @@ export function NewListingWizard() {
                     uploadTotalCount={uploadProgress.total}
                     uploadPercentage={uploadProgress.total > 0 ? Math.round((uploadProgress.completed / uploadProgress.total) * 100) : 0}
                     currentFileName={uploadProgress.currentFileName}
+                    uploadedImageUrls={uploadedImageUrls}
                     onFilesChanged={() => {
                       if (uploadedImageUrls.length > 0 || uploadedFilesSignature) {
                         resetUploadedPhotos();
