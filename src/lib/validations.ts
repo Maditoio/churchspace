@@ -48,6 +48,14 @@ export const listingSchema = z.object({
   salePrice: z.number().nonnegative().optional(),
   depositAmount: z.number().nonnegative().optional(),
   sharingSchedule: z.array(z.object({ day: z.string(), startTime: z.string(), endTime: z.string(), isAvailable: z.boolean() })).optional(),
+  images: z.array(
+    z.object({
+      url: z.string().url(),
+      alt: z.string().optional(),
+      isPrimary: z.boolean().default(false),
+      order: z.number().int().nonnegative().default(0),
+    }),
+  ).default([]),
 });
 
 export type ListingInput = z.infer<typeof listingSchema>;

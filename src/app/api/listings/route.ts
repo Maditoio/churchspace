@@ -43,14 +43,26 @@ export async function POST(request: NextRequest) {
   const slugBase = slugify(parsed.data.title);
   const slug = `${slugBase}-${Date.now().toString().slice(-6)}`;
 
+  const { images, ...listingData } = parsed.data;
+
   const created = await prisma.listing.create({
     data: {
-      ...parsed.data,
+      ...listingData,
       slug,
       status: ListingStatus.PENDING_REVIEW,
-      availableFrom: parsed.data.availableFrom ? new Date(parsed.data.availableFrom) : undefined,
-      availableTo: parsed.data.availableTo ? new Date(parsed.data.availableTo) : undefined,
+      availableFrom: listingData.availableFrom ? new Date(listingData.availableFrom) : undefined,
+      availableTo: listingData.availableTo ? new Date(listingData.availableTo) : undefined,
       agentId: session.user.id,
+      ...(images.length > 0 && {
+        images: {
+          create: images.map((img) => ({
+            url: img.url,
+            alt: img.alt ?? listingData.title,
+            isPrimary: img.isPrimary,
+            order: img.order,
+          })),
+        },
+      }),
     },
   });
 

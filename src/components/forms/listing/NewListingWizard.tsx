@@ -241,7 +241,15 @@ export function NewListingWizard() {
       const response = await fetch("/api/listings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          images: imageUrls.map((url, index) => ({
+            url,
+            alt: payload.title,
+            isPrimary: index === 0,
+            order: index,
+          })),
+        }),
       });
 
       if (response.status === 401) {
@@ -251,33 +259,13 @@ export function NewListingWizard() {
       }
 
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as ApiErrorShape | null;
-        toast.error(getApiErrorMessage(payload, "Could not submit listing for review."));
+        const responsePayload = (await response.json().catch(() => null)) as ApiErrorShape | null;
+        toast.error(getApiErrorMessage(responsePayload, "Could not submit listing for review."));
         return;
       }
 
       const { listing } = await response.json();
 
-      if (listing?.id && imageUrls.length > 0) {
-        const imagesResponse = await fetch(`/api/listings/${listing.id}/images`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            images: imageUrls.map((url, index) => ({
-              url,
-              alt: payload.title,
-              isPrimary: index === 0,
-              order: index,
-            })),
-          }),
-        });
-
-        if (!imagesResponse.ok) {
-          const imagesPayload = (await imagesResponse.json().catch(() => null)) as ApiErrorShape | null;
-          toast.error(getApiErrorMessage(imagesPayload, "Listing was created, but image URLs could not be saved."));
-          return;
-        }
-      }
 
       toast.success("Listing submitted for review.");
       router.push("/dashboard/listings");
