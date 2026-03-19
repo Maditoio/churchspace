@@ -1,7 +1,7 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
@@ -16,8 +16,6 @@ import { Step7Review } from "@/components/forms/listing/Step7Review";
 
 const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
 const UPLOAD_TIMEOUT_MS = 120_000;
-
-const SUBMIT_BUTTON_NAME = "submit-listing";
 
 type ApiErrorShape = {
   error?:
@@ -52,14 +50,7 @@ function stringifyErrorDetail(error: unknown) {
   return "Unknown error";
 }
 
-function getSubmitterName(event: React.FormEvent<HTMLFormElement>) {
-  const nativeEvent = event.nativeEvent as SubmitEvent;
-  const submitter = nativeEvent.submitter;
-
-  return submitter instanceof HTMLButtonElement ? submitter.name : "";
-}
-
-async function uploadFileToBlob(file: File, payload: { listingId: string; order: number; alt: string }) {
+async function uploadFileToBlob(file: File) {
   const pathname = `listings/${Date.now()}-${sanitizeFileName(file.name)}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
@@ -68,7 +59,6 @@ async function uploadFileToBlob(file: File, payload: { listingId: string; order:
     const blob = await upload(pathname, file, {
       access: "public",
       handleUploadUrl: "/api/blob/upload",
-      clientPayload: JSON.stringify(payload),
       ...(file.type ? { contentType: file.type } : {}),
       multipart: file.size > 5 * 1024 * 1024,
       abortSignal: controller.signal,
@@ -93,6 +83,7 @@ async function uploadFileToBlob(file: File, payload: { listingId: string; order:
 export function NewListingWizard() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
   function preventEnterSubmit(event: React.KeyboardEvent<HTMLFormElement>) {
@@ -105,20 +96,22 @@ export function NewListingWizard() {
     }
   }
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (getSubmitterName(event) !== SUBMIT_BUTTON_NAME) {
-      return;
-    }
-
-    if (step < 7) {
+  async function handleSubmitClick() {
+    if (step !== 7) {
       setStep(7);
-      toast.info("Please review your listing, then click Submit for Review.");
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    const form = formRef.current;
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const confirmAccuracy = formData.get("confirmAccuracy");
+    if (confirmAccuracy !== "on") {
+      toast.error("Please confirm the listing information is accurate before submitting.");
+      return;
+    }
+
     const listingType = formData.getAll("listingType").map(String);
     const features = formData.getAll("features").map(String);
     const equipment = formData.getAll("equipment").map(String);
@@ -153,6 +146,27 @@ export function NewListingWizard() {
 
     setSubmitting(true);
     try {
+      const imageUrls: string[] = [];
+      const uploadErrors: string[] = [];
+
+      if (filesToUpload.length > 0) {
+        for (const file of filesToUpload) {
+          try {
+            const uploadedUrl = await uploadFileToBlob(file);
+            imageUrls.push(uploadedUrl);
+          } catch (error) {
+            const reason = error instanceof Error ? error.message : "Unknown upload error";
+            uploadErrors.push(`${file.name}: ${reason}`);
+          }
+        }
+
+        if (uploadErrors.length > 0) {
+          const more = uploadErrors.length > 1 ? ` (+${uploadErrors.length - 1} more)` : "";
+          toast.error(`Image upload failed. ${uploadErrors[0]}${more}`);
+          return;
+        }
+      }
+
       const response = await fetch("/api/listings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -173,35 +187,28 @@ export function NewListingWizard() {
 
       const { listing } = await response.json();
 
-      const imageUrls: string[] = [];
-      const uploadErrors: string[] = [];
-
-      if (filesToUpload.length > 0) {
-        for (const [index, file] of filesToUpload.entries()) {
-          try {
-            const uploadedUrl = await uploadFileToBlob(file, {
-              listingId: listing.id,
-              order: index,
+      if (listing?.id && imageUrls.length > 0) {
+        const imagesResponse = await fetch(`/api/listings/${listing.id}/images`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            images: imageUrls.map((url, index) => ({
+              url,
               alt: payload.title,
-            });
-            imageUrls.push(uploadedUrl);
-          } catch (error) {
-            const reason = error instanceof Error ? error.message : "Unknown upload error";
-            uploadErrors.push(`${file.name}: ${reason}`);
-          }
-        }
+              isPrimary: index === 0,
+              order: index,
+            })),
+          }),
+        });
 
-        if (uploadErrors.length > 0) {
-          const more = uploadErrors.length > 1 ? ` (+${uploadErrors.length - 1} more)` : "";
-          toast.error(`Image upload failed. ${uploadErrors[0]}${more}`);
+        if (!imagesResponse.ok) {
+          const imagesPayload = (await imagesResponse.json().catch(() => null)) as ApiErrorShape | null;
+          toast.error(getApiErrorMessage(imagesPayload, "Listing was created, but image URLs could not be saved."));
+          return;
         }
       }
 
-      if (uploadErrors.length > 0) {
-        toast.success("Listing submitted for review, but some images failed to upload.");
-      } else {
-        toast.success("Listing submitted for review.");
-      }
+      toast.success("Listing submitted for review.");
       router.push("/dashboard/listings");
       router.refresh();
     } finally {
@@ -223,8 +230,9 @@ export function NewListingWizard() {
       </div>
 
       <form
+        ref={formRef}
         noValidate
-        onSubmit={submit}
+        onSubmit={(event) => event.preventDefault()}
         onKeyDown={preventEnterSubmit}
         className="overflow-hidden rounded-(--radius-xl) border border-(--border-strong) bg-white/92 p-5 shadow-(--shadow-lg) backdrop-blur md:p-8"
       >
@@ -252,7 +260,7 @@ export function NewListingWizard() {
               Next Step
             </Button>
           ) : (
-            <Button type="submit" name={SUBMIT_BUTTON_NAME} disabled={submitting}>
+            <Button type="button" onClick={handleSubmitClick} disabled={submitting}>
               {submitting ? "Submitting..." : "Submit for Review"}
             </Button>
           )}
