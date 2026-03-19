@@ -3,16 +3,21 @@
 import { upload } from "@vercel/blob/client";
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export default function TestUploadPage() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [listingId, setListingId] = useState("");
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [progress, setProgress] = useState(0);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [savedRecord, setSavedRecord] = useState<{ id: string; url: string } | null>(null);
 
   function reset() {
     setStatus("idle");
@@ -20,7 +25,50 @@ export default function TestUploadPage() {
     setUploadedUrl(null);
     setErrorMessage(null);
     setFileName(null);
+    setSaveStatus("idle");
+    setSavedRecord(null);
     if (inputRef.current) inputRef.current.value = "";
+  }
+
+  async function saveToDb() {
+    if (!uploadedUrl || !listingId.trim()) {
+      toast.error("Provide a listing ID to save the image to the database.");
+      return;
+    }
+
+    setSaveStatus("saving");
+    try {
+      const res = await fetch(`/api/listings/${listingId.trim()}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          images: [{ url: uploadedUrl, alt: fileName ?? "Test upload", isPrimary: false, order: 0 }],
+        }),
+      });
+
+      if (res.status === 401) {
+        toast.error("Not signed in — cannot save to database.");
+        setSaveStatus("error");
+        return;
+      }
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        const msg = typeof json?.error === "string" ? json.error : "Failed to save image record.";
+        toast.error(msg);
+        setSaveStatus("error");
+        return;
+      }
+
+      const json = await res.json();
+      const record = json?.images?.[0] ?? null;
+      setSavedRecord(record);
+      setSaveStatus("saved");
+      toast.success("Image saved to ListingImage table.");
+    } catch {
+      toast.error("Network error while saving image record.");
+      setSaveStatus("error");
+    }
   }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -80,6 +128,20 @@ export default function TestUploadPage() {
       </div>
 
       <div className="rounded-xl border border-(--border-strong) bg-white/92 p-6 shadow-(--shadow-lg) backdrop-blur">
+        {/* Listing ID */}
+        <div className="mb-5">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-(--text-muted)">
+            Listing ID <span className="font-normal normal-case text-(--text-muted)">(required to save to DB)</span>
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. cm7x9a2b30001..."
+            value={listingId}
+            onChange={(e) => setListingId(e.target.value)}
+            className="w-full rounded-lg border border-(--border) bg-(--surface-raised) px-3 py-2 text-sm text-foreground placeholder:text-(--text-muted) focus:outline-none focus:ring-2 focus:ring-(--primary)"
+          />
+        </div>
+
         {/* Drop zone / trigger */}
         <div
           className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-(--border) bg-(--surface-raised) px-6 py-12 text-center transition hover:border-(--primary) hover:bg-(--primary-soft)"
@@ -139,6 +201,33 @@ export default function TestUploadPage() {
               >
                 {uploadedUrl}
               </a>
+            </div>
+
+            {/* Save to DB */}
+            <div className="rounded-lg border border-(--border) bg-(--surface-raised) p-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-(--text-muted)">Save to ListingImage Table</p>
+              {saveStatus === "saved" && savedRecord ? (
+                <div className="space-y-1 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
+                  <p className="font-semibold">Saved successfully</p>
+                  <p>Record ID: <span className="font-mono">{savedRecord.id}</span></p>
+                  <p className="break-all">URL: {savedRecord.url}</p>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={!listingId.trim() || saveStatus === "saving"}
+                  onClick={saveToDb}
+                  className="w-full rounded-[10px] border border-(--primary) px-4 py-2 text-sm font-medium text-(--primary) hover:bg-(--primary-soft) disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {saveStatus === "saving"
+                    ? "Saving…"
+                    : saveStatus === "error"
+                      ? "Retry Save"
+                      : listingId.trim()
+                        ? `Save to listing ${listingId.trim().slice(0, 12)}…`
+                        : "Enter a listing ID above to save"}
+                </button>
+              )}
             </div>
           </div>
         )}
