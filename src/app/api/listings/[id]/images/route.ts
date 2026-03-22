@@ -13,14 +13,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const listing = await prisma.listing.findUnique({
       where: { id },
-      select: { userId: true, images: { orderBy: { order: "asc" } } },
+      select: { agentId: true, images: { orderBy: { order: "asc" } } },
     });
 
     if (!listing) {
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
 
-    if (listing.userId !== session.user.id) {
+    if (listing.agentId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -51,14 +51,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const listing = await prisma.listing.findUnique({
       where: { id },
-      select: { userId: true, status: true },
+      select: { agentId: true, status: true },
     });
 
     if (!listing) {
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
 
-    if (listing.userId !== session.user.id) {
+    if (listing.agentId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -121,14 +121,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // Verify listing ownership and not in review
     const listing = await prisma.listing.findUnique({
       where: { id },
-      select: { userId: true, status: true },
+      select: { agentId: true, status: true },
     });
 
     if (!listing) {
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
 
-    if (listing.userId !== session.user.id) {
+    if (listing.agentId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -185,14 +185,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // Verify listing ownership and not in review
     const listing = await prisma.listing.findUnique({
       where: { id },
-      select: { userId: true, status: true },
+      select: { agentId: true, status: true },
     });
 
     if (!listing) {
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
     }
 
-    if (listing.userId !== session.user.id) {
+    if (listing.agentId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
