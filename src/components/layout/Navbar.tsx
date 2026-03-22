@@ -30,7 +30,6 @@ export function Navbar({ session }: { session: Session | null }) {
           <Link href="/bond-calculator" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">Bond Calculator</Link>
           <Link href="/about" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">About</Link>
           <Link href="/contact" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">Contact</Link>
-          <Link href="/test-upload" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">Test Upload</Link>
         </div>
 
         {/* Desktop auth */}
@@ -69,7 +68,6 @@ export function Navbar({ session }: { session: Session | null }) {
             <Link href="/bond-calculator" onClick={() => setOpen(false)}>Bond Calculator</Link>
             <Link href="/about" onClick={() => setOpen(false)}>About</Link>
             <Link href="/contact" onClick={() => setOpen(false)}>Contact</Link>
-            <Link href="/test-upload" onClick={() => setOpen(false)}>Test Upload</Link>
             <Link href="/dashboard/listings/new" onClick={() => setOpen(false)}>
               <Button variant="accent" className="w-full">List a Space</Button>
             </Link>
