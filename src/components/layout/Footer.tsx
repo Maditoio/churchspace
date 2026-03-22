@@ -15,6 +15,7 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
             <li><Link href="/listings">Listings</Link></li>
             <li><Link href="/search">Search</Link></li>
+            <li><Link href="/bond-calculator">Bond Calculator</Link></li>
             <li><Link href="/about">About</Link></li>
             <li><Link href="/contact">Contact</Link></li>
           </ul>

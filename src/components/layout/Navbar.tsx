@@ -27,6 +27,7 @@ export function Navbar({ session }: { session: Session | null }) {
         {/* Desktop nav */}
         <div className="hidden items-center gap-2 rounded-full border border-(--border) bg-white/70 p-2 shadow-(--shadow-sm) md:flex">
           <Link href="/listings" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">Listings</Link>
+          <Link href="/bond-calculator" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">Bond Calculator</Link>
           <Link href="/about" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">About</Link>
           <Link href="/contact" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">Contact</Link>
           <Link href="/test-upload" className="rounded-full px-4 py-2 text-sm font-medium text-(--text-secondary) hover:bg-(--primary-soft) hover:text-(--primary)">Test Upload</Link>
@@ -65,6 +66,7 @@ export function Navbar({ session }: { session: Session | null }) {
         <div className="border-t border-(--border) bg-white/95 p-6 backdrop-blur md:hidden">
           <div className="flex flex-col gap-4">
             <Link href="/listings" onClick={() => setOpen(false)}>Listings</Link>
+            <Link href="/bond-calculator" onClick={() => setOpen(false)}>Bond Calculator</Link>
             <Link href="/about" onClick={() => setOpen(false)}>About</Link>
             <Link href="/contact" onClick={() => setOpen(false)}>Contact</Link>
             <Link href="/test-upload" onClick={() => setOpen(false)}>Test Upload</Link>
