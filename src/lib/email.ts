@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://churchspace.co.za";
 
 const brandStyles = `
   font-family: 'DM Sans', Arial, sans-serif;
@@ -49,8 +50,22 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
   );
 }
 
+export async function sendPasswordResetEmail(args: { to: string; name?: string | null; token: string; email: string }) {
+  const resetUrl = `${appBaseUrl}/reset-password?token=${encodeURIComponent(args.token)}&email=${encodeURIComponent(args.email)}`;
+
+  return sendEmail(
+    args.to,
+    "Reset your ChurchSpace password",
+    wrapTemplate(
+      "Reset Your Password",
+      `<p>Hi ${args.name ?? "there"}, we received a request to reset your password.</p><p>If this was you, click the button below. This link expires in 30 minutes.</p>`,
+      resetUrl,
+      "Reset Password",
+    ),
+  );
+}
+
 export async function sendListingStatusEmail(args: { to: string; status: "approved" | "rejected" | "submitted"; title: string; reason?: string }) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://churchspace.co.za";
   const contentByStatus = {
     submitted: {
       subject: "Listing Submitted for Review",
@@ -73,7 +88,7 @@ export async function sendListingStatusEmail(args: { to: string; status: "approv
   return sendEmail(
     args.to,
     selected.subject,
-    wrapTemplate(selected.title, selected.body, `${baseUrl}/dashboard/listings`, "View My Listings"),
+    wrapTemplate(selected.title, selected.body, `${appBaseUrl}/dashboard/listings`, "View My Listings"),
   );
 }
 
@@ -96,5 +111,39 @@ export async function sendEnquiryEmails(args: {
     args.senderEmail,
     `We sent your enquiry for ${args.listingTitle}`,
     wrapTemplate("Enquiry Confirmation", `<p>Thanks ${args.senderName}, your enquiry has been sent to the listing agent.</p>${baseBody}`),
+  );
+}
+
+export async function sendListingRecommendationsEmail(args: {
+  to: string;
+  name?: string | null;
+  filters: { city?: string | null; query?: string | null; type?: string | null; purpose?: string | null };
+  listings: Array<{ title: string; city: string; suburb: string; slug: string }>;
+}) {
+  const filterChips = [
+    args.filters.city ? `<li><strong>City:</strong> ${args.filters.city}</li>` : "",
+    args.filters.query ? `<li><strong>Keyword:</strong> ${args.filters.query}</li>` : "",
+    args.filters.type ? `<li><strong>Property Type:</strong> ${args.filters.type.replace(/_/g, " ")}</li>` : "",
+    args.filters.purpose ? `<li><strong>Listing Type:</strong> ${args.filters.purpose}</li>` : "",
+  ].filter(Boolean).join("");
+
+  const listingItems = args.listings
+    .map(
+      (listing) =>
+        `<li style="margin-bottom:10px;"><a href="${appBaseUrl}/listings/${listing.slug}" style="color:#1A1A2E;text-decoration:none;font-weight:600;">${listing.title}</a><br/><span style="font-size:13px;color:#5C5C6E;">${listing.suburb}, ${listing.city}</span></li>`,
+    )
+    .join("");
+
+  return sendEmail(
+    args.to,
+    "New ChurchSpace listings that match your search",
+    wrapTemplate(
+      "New Listings You Might Like",
+      `<p>Hi ${args.name ?? "there"}, new listings were added that match your recent search preferences.</p>
+       <ul>${filterChips}</ul>
+       <ul>${listingItems}</ul>`,
+      `${appBaseUrl}/listings`,
+      "Browse Listings",
+    ),
   );
 }

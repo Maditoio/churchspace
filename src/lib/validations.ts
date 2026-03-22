@@ -16,6 +16,23 @@ export const signInSchema = z.object({
   password: z.string().min(8),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.email(),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.email(),
+  token: z.string().min(20),
+  password: z.string().min(8),
+});
+
+export const searchPreferenceSchema = z.object({
+  query: z.string().trim().max(120).optional().or(z.literal("")),
+  city: z.string().trim().max(80).optional().or(z.literal("")),
+  type: z.nativeEnum(PropertyType).optional(),
+  purpose: z.nativeEnum(ListingType).optional(),
+});
+
 export const enquirySchema = z.object({
   listingId: z.string().cuid(),
   senderName: z.string().min(2),

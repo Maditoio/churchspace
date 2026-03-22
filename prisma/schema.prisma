@@ -71,6 +71,7 @@ model User {
   accounts      Account[]
   savedListings SavedListing[]
   sentEnquiries Enquiry[] @relation("EnquirySender")
+  searchPreference UserSearchPreference?
 }
 
 model Account {
@@ -232,4 +233,32 @@ model SiteSettings {
   key       String   @unique
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model UserSearchPreference {
+  id                       String       @id @default(cuid())
+  userId                   String       @unique
+  query                    String?
+  city                     String?
+  propertyType             PropertyType?
+  listingType              ListingType?
+  lastSearchedAt           DateTime     @default(now())
+  lastRecommendationSentAt DateTime?
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+  user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lastSearchedAt])
 }

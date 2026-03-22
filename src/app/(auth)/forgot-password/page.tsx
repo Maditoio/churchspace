@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
@@ -15,9 +14,16 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Trigger the Resend magic-link flow via NextAuth email provider
-      const res = await signIn("resend", { email, redirect: false, callbackUrl: "/dashboard" });
-      if (res?.error) throw new Error(res.error);
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+
       setSent(true);
     } catch {
       toast.error("Could not send reset link. Please try again.");
@@ -29,11 +35,11 @@ export default function ForgotPasswordPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-10">
       <div className="w-full rounded-(--radius) border border-(--border) bg-white p-6">
-        <h1 className="font-display text-4xl text-(--text-primary)">Reset Password</h1>
-        <p className="mt-2 text-sm text-(--text-secondary)">Enter your email to receive a sign-in link.</p>
+        <h1 className="font-display text-4xl text-foreground">Reset Password</h1>
+        <p className="mt-2 text-sm text-(--text-secondary)">Enter your email to receive a password reset link.</p>
         {sent ? (
           <div className="mt-6 rounded-(--radius) bg-(--accent-light) p-4 text-sm text-(--primary)">
-            Check your inbox — a magic sign-in link has been sent to <strong>{email}</strong>.
+            Check your inbox. If an account exists for <strong>{email}</strong>, a reset link has been sent.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-6 space-y-3">
@@ -45,7 +51,7 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Sending…" : "Send Sign-In Link"}
+              {loading ? "Sending..." : "Send Reset Link"}
             </Button>
           </form>
         )}
