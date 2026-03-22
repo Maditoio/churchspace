@@ -43,7 +43,6 @@ export function EnquiryForm({ listingId }: EnquiryFormProps) {
       <Input name="email" type="email" placeholder="Email" required />
       <Input name="phone" placeholder="Phone (optional)" />
       <Input name="message" placeholder="Your message" required />
-      <Input name="date" type="date" />
       <Button type="submit" className="w-full" disabled={loading}>{loading ? "Sending..." : "Request Viewing"}</Button>
     </form>
   );

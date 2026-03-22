@@ -28,13 +28,15 @@ export function ContactAgentCard({ listing, agent }: Props) {
         </div>
       </div>
 
-      <Link href={`mailto:${agent.email}`}><Button className="w-full">Send Email</Button></Link>
+      <div className="flex flex-col gap-3">
+        <Link href={`mailto:${agent.email}`}><Button className="w-full">Send Email</Button></Link>
 
-      {whatsappUrl ? (
-        <Link href={whatsappUrl} target="_blank">
-          <Button className="w-full bg-[#25D366] text-white hover:opacity-90">Chat on WhatsApp</Button>
-        </Link>
-      ) : null}
+        {whatsappUrl ? (
+          <Link href={whatsappUrl} target="_blank">
+            <Button className="w-full bg-[#25D366] text-white hover:opacity-90">Chat on WhatsApp</Button>
+          </Link>
+        ) : null}
+      </div>
 
       <div className="border-t border-[var(--border)] pt-3">
         <p className="mb-2 text-sm font-medium text-[var(--text-primary)]">Request Viewing</p>
