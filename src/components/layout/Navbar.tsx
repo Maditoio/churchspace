@@ -76,6 +76,8 @@ export function Navbar({ session }: { session: Session | null }) {
                 <Link href={isAdmin ? "/admin" : "/dashboard"} onClick={() => setOpen(false)} className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" /> {isAdmin ? "Admin Panel" : "Dashboard"}
                 </Link>
+                <Link href="/dashboard/alerts" onClick={() => setOpen(false)}>Listing Alerts</Link>
+                <Link href="/dashboard/profile" onClick={() => setOpen(false)}>Profile</Link>
                 <button
                   className="flex items-center gap-2 text-sm text-(--destructive)"
                   onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}

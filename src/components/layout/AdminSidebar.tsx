@@ -13,6 +13,8 @@ export function AdminSidebar({ admin = false }: AdminSidebarProps) {
         { href: "/admin/payments", label: "Payments" },
         { href: "/admin/enquiries", label: "Enquiries" },
         { href: "/admin/settings", label: "Settings" },
+        { href: "/dashboard/alerts", label: "Listing Alerts" },
+        { href: "/dashboard/profile", label: "Profile" },
       ]
     : [
         { href: "/dashboard", label: "Overview" },
