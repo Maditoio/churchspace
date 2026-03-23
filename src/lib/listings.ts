@@ -19,6 +19,7 @@ export function mapListingToCard(
     suburb: listing.suburb,
     congregationSize: listing.congregationSize,
     areaSquareMeters: listing.areaSquareMeters,
+    rentPricePerMonth: listing.rentPricePerMonth ? Number(listing.rentPricePerMonth) : null,
     rentPricePerHour: listing.rentPricePerHour ? Number(listing.rentPricePerHour) : null,
     rentPricePerDay: listing.rentPricePerDay ? Number(listing.rentPricePerDay) : null,
     salePrice: listing.salePrice ? Number(listing.salePrice) : null,

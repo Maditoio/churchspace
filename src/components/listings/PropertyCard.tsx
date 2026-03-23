@@ -36,13 +36,15 @@ export function PropertyCard({ listing }: PropertyCardProps) {
 
   const firstImage = listing.images[0]?.url;
   const firstAlt = listing.images[0]?.alt ?? listing.title;
-  const price = listing.salePrice
-    ? formatPrice(listing.salePrice)
+  const price = listing.rentPricePerMonth
+    ? formatPrice(listing.rentPricePerMonth, " / month")
     : listing.rentPricePerHour
       ? formatPrice(listing.rentPricePerHour, " / hour")
       : listing.rentPricePerDay
         ? formatPrice(listing.rentPricePerDay, " / day")
-        : "POA";
+        : listing.salePrice
+          ? formatPrice(listing.salePrice)
+          : "POA";
 
   return (
     <article className="group relative overflow-hidden rounded-(--radius) border border-(--border) bg-white shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-[3px] hover:shadow-[var(--shadow-lg)]">

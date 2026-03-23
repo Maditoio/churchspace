@@ -18,6 +18,7 @@ export type PropertyCardListing = {
   suburb: string;
   congregationSize?: number | null;
   areaSquareMeters?: number | null;
+  rentPricePerMonth?: number | null;
   rentPricePerHour?: number | null;
   rentPricePerDay?: number | null;
   salePrice?: number | null;
