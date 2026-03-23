@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
   let emailsSent = 0;
 
   for (const preference of preferences) {
-    const baseline = preference.lastRecommendationSentAt ?? preference.lastSearchedAt;
+    const baseline = preference.lastRecommendationSentAt ?? preference.lastSearchedAt ?? new Date(0);
 
     const listings = await prisma.listing.findMany({
       where: {
