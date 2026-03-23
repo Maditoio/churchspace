@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
     agentEmail: listing.agent.email,
     senderEmail: parsed.data.senderEmail,
     senderName: parsed.data.senderName,
+    senderPhone: parsed.data.senderPhone,
     listingTitle: listing.title,
+    listingSlug: listing.slug,
+    listingCity: listing.city,
+    listingSuburb: listing.suburb,
     message: parsed.data.message,
   });
 
