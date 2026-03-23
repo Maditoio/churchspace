@@ -273,6 +273,7 @@ model UserSearchPreference {
   userId                   String       @unique
   query                    String?
   city                     String?
+  suburb                   String?
   propertyType             PropertyType?
   listingType              ListingType?
   lastSearchedAt           DateTime     @default(now())

@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         {
           OR: [
             { query: { not: null } },
+            { suburb: { not: null } },
             { city: { not: null } },
             { propertyType: { not: null } },
             { listingType: { not: null } },
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
         paymentExpiresAt: { gte: now },
         isTaken: false,
         createdAt: { gt: baseline },
+        suburb: preference.suburb ? { contains: preference.suburb, mode: "insensitive" } : undefined,
         city: preference.city ? { contains: preference.city, mode: "insensitive" } : undefined,
         propertyType: preference.propertyType ?? undefined,
         listingType: preference.listingType ? { has: preference.listingType } : undefined,
@@ -100,6 +102,7 @@ export async function GET(request: NextRequest) {
       to: preference.user.email,
       name: preference.user.name,
       filters: {
+        suburb: preference.suburb,
         city: preference.city,
         query: preference.query,
         type: preference.propertyType,

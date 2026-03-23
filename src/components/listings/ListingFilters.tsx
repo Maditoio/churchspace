@@ -20,7 +20,7 @@ export function ListingFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const persistPreference = async (payload: { city?: string; type?: string; purpose?: string }) => {
+  const persistPreference = async (payload: { suburb?: string; city?: string; type?: string; purpose?: string }) => {
     try {
       await fetch("/api/users/search-preferences", {
         method: "POST",
@@ -36,9 +36,9 @@ export function ListingFilters() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const params = new URLSearchParams(searchParams.toString());
-    const payload: { city?: string; type?: string; purpose?: string } = {};
+    const payload: { suburb?: string; city?: string; type?: string; purpose?: string } = {};
 
-    for (const key of ["city", "type", "purpose"] as const) {
+    for (const key of ["suburb", "city", "type", "purpose"] as const) {
       const value = formData.get(key)?.toString();
       if (value) params.set(key, value);
       else params.delete(key);
@@ -51,6 +51,7 @@ export function ListingFilters() {
 
   return (
     <form onSubmit={applyFilter} className="space-y-3 rounded-(--radius) border border-(--border) bg-white p-4">
+      <Input name="suburb" placeholder="Area / Suburb" defaultValue={searchParams.get("suburb") ?? ""} />
       <Input name="city" placeholder="City" defaultValue={searchParams.get("city") ?? ""} />
       <select name="type" className="h-11 w-full rounded-lg border border-(--border) px-3 text-sm">
         <option value="">All Property Types</option>

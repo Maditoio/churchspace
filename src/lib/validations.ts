@@ -29,6 +29,8 @@ export const resetPasswordSchema = z.object({
 export const searchPreferenceSchema = z.object({
   query: z.string().trim().max(120).optional().or(z.literal("")),
   city: z.string().trim().max(80).optional().or(z.literal("")),
+  suburb: z.string().trim().max(80).optional().or(z.literal("")),
+  area: z.string().trim().max(80).optional().or(z.literal("")),
   type: z.nativeEnum(PropertyType).optional(),
   purpose: z.nativeEnum(ListingType).optional(),
 });

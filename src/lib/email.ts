@@ -177,10 +177,11 @@ export async function sendEnquiryEmails(args: {
 export async function sendListingRecommendationsEmail(args: {
   to: string;
   name?: string | null;
-  filters: { city?: string | null; query?: string | null; type?: string | null; purpose?: string | null };
+  filters: { city?: string | null; suburb?: string | null; query?: string | null; type?: string | null; purpose?: string | null };
   listings: Array<{ title: string; city: string; suburb: string; slug: string }>;
 }) {
   const filterChips = [
+    args.filters.suburb ? `<li><strong>Area/Suburb:</strong> ${args.filters.suburb}</li>` : "",
     args.filters.city ? `<li><strong>City:</strong> ${args.filters.city}</li>` : "",
     args.filters.query ? `<li><strong>Keyword:</strong> ${args.filters.query}</li>` : "",
     args.filters.type ? `<li><strong>Property Type:</strong> ${args.filters.type.replace(/_/g, " ")}</li>` : "",

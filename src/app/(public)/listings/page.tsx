@@ -26,6 +26,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       paymentStatus: "PAID",
       paymentExpiresAt: { gte: now },
       isTaken: false,
+      suburb: params.suburb ? { contains: params.suburb, mode: "insensitive" } : undefined,
       city: params.city ? { contains: params.city, mode: "insensitive" } : undefined,
       propertyType: params.type ? (params.type as PropertyType) : undefined,
       listingType: params.purpose ? { has: params.purpose as ListingType } : undefined,

@@ -20,6 +20,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const session = await auth();
   const now = new Date();
   const q = params.q ?? "";
+  const suburb = params.suburb ?? "";
   const city = params.city ?? "";
 
   const listings = await prisma.listing.findMany({
@@ -34,6 +35,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             { description: { contains: q, mode: "insensitive" } },
           ]
         : undefined,
+      suburb: suburb ? { contains: suburb, mode: "insensitive" } : undefined,
       city: city ? { contains: city, mode: "insensitive" } : undefined,
     },
     include: {
