@@ -46,7 +46,7 @@ export async function POST(request: Request) {
           throw new Error("Unauthorized upload request");
         }
 
-        if (!pathname.startsWith("listings/")) {
+        if (!pathname.startsWith("listings/") && !pathname.startsWith("avatars/")) {
           throw new Error("Invalid upload path");
         }
 

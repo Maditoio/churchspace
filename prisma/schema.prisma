@@ -59,6 +59,7 @@ model User {
   phone         String?
   whatsapp      String?
   avatar        String?
+  avatarThumb   String?
   role          Role      @default(USER)
   churchName    String?
   denomination  String?

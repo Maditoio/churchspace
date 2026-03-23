@@ -4,7 +4,7 @@ import { PropertyCardListing } from "@/types";
 export function mapListingToCard(
   listing: Listing & {
     images: ListingImage[];
-    agent: Pick<User, "name" | "avatar" | "churchName" | "whatsapp" | "email">;
+    agent: Pick<User, "name" | "avatar" | "avatarThumb" | "churchName" | "whatsapp" | "email">;
     savedBy?: Pick<SavedListing, "id">[];
   },
 ): PropertyCardListing {
@@ -28,7 +28,7 @@ export function mapListingToCard(
     status: listing.status as ListingStatus,
     agent: {
       name: listing.agent.name,
-      avatar: listing.agent.avatar,
+      avatar: listing.agent.avatarThumb ?? listing.agent.avatar,
       churchName: listing.agent.churchName,
       whatsapp: listing.agent.whatsapp,
       email: listing.agent.email,

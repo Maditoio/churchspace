@@ -4,7 +4,7 @@ export type UserRole = "USER" | "AGENT" | "SUPER_ADMIN";
 
 export type ListingWithRelations = Listing & {
   images: ListingImage[];
-  agent: Pick<User, "id" | "name" | "avatar" | "churchName" | "whatsapp" | "email" | "denomination">;
+  agent: Pick<User, "id" | "name" | "avatar" | "avatarThumb" | "churchName" | "whatsapp" | "email" | "denomination">;
 };
 
 export type PropertyCardListing = {

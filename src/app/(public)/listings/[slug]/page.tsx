@@ -114,7 +114,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           denomination: listing.agent.denomination,
           email: listing.agent.email,
           whatsapp: listing.agent.whatsapp,
-          avatar: listing.agent.avatar,
+          avatar: listing.agent.avatarThumb ?? listing.agent.avatar,
         }}
       />
     </div>
