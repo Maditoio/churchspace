@@ -72,6 +72,7 @@ model User {
   savedListings SavedListing[]
   sentEnquiries Enquiry[] @relation("EnquirySender")
   searchPreference UserSearchPreference?
+  notifications Notification[]
 }
 
 model Account {
@@ -151,6 +152,7 @@ model Listing {
   agentId           String
   savedBy           SavedListing[]
   enquiries         Enquiry[]
+  notifications     Notification[]
   slots             AvailabilitySlot[]
   payments          ListingPayment[]
   createdAt         DateTime         @default(now())
@@ -159,6 +161,24 @@ model Listing {
   @@index([status])
   @@index([city, suburb])
   @@index([agentId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String?
+  title     String
+  message   String
+  reason    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([listingId])
+  @@index([isRead])
 }
 
 model ListingPayment {

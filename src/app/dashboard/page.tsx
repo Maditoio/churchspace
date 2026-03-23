@@ -21,7 +21,7 @@ export default async function DashboardPage() {
 
   const listingScope = isAdmin ? {} : { agentId };
 
-  const [totalListings, activeListings, totalEnquiries, savedByOthers, viewAggregate, listings] = await Promise.all([
+  const [totalListings, activeListings, totalEnquiries, savedByOthers, viewAggregate, listings, notifications] = await Promise.all([
     prisma.listing.count({ where: listingScope }),
     prisma.listing.count({
       where: {
@@ -46,6 +46,11 @@ export default async function DashboardPage() {
       include: { images: true, agent: true },
       orderBy: { createdAt: "desc" },
       take: 3,
+    }),
+    prisma.notification.findMany({
+      where: isAdmin ? { userId: session.user.id } : { userId: agentId },
+      orderBy: { createdAt: "desc" },
+      take: 6,
     }),
   ]);
 
@@ -76,6 +81,31 @@ export default async function DashboardPage() {
         <Link href="/dashboard/listings"><Button variant="secondary">View My Listings</Button></Link>
         <Link href="/dashboard/enquiries"><Button variant="secondary">View Enquiries</Button></Link>
       </div>
+
+      <section>
+        <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Notifications</h2>
+        <div className="space-y-3">
+          {notifications.length ? (
+            notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`rounded-[var(--radius)] border p-4 ${notification.isRead ? "border-[var(--border)] bg-white" : "border-[var(--accent)]/50 bg-[var(--accent-light)]/30"}`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium text-[var(--text-primary)]">{notification.title}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">{notification.createdAt.toLocaleString()}</p>
+                </div>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">{notification.message}</p>
+                {notification.reason ? (
+                  <p className="mt-2 text-sm text-[var(--text-primary)]"><span className="font-semibold">Reason:</span> {notification.reason}</p>
+                ) : null}
+              </div>
+            ))
+          ) : (
+            <p className="rounded-[var(--radius)] border border-[var(--border)] bg-white p-4 text-sm text-[var(--text-secondary)]">No notifications yet.</p>
+          )}
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">{isAdmin ? "Recent Enquiries (All)" : "Recent Enquiries"}</h2>
