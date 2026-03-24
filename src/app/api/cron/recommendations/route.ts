@@ -13,12 +13,15 @@ function isAuthorized(request: NextRequest) {
 
   const bearer = request.headers.get("authorization");
   const headerSecret = request.headers.get("x-cron-secret");
+  const userAgent = request.headers.get("user-agent")?.toLowerCase() ?? "";
 
-  if (headerSecret === secret) {
-    return true;
+  const hasValidSecret = headerSecret === secret || bearer === `Bearer ${secret}`;
+  if (!hasValidSecret) {
+    return false;
   }
 
-  return bearer === `Bearer ${secret}`;
+  // Vercel scheduled jobs use a vercel-cron user-agent.
+  return userAgent.includes("vercel-cron");
 }
 
 export async function GET(request: NextRequest) {
