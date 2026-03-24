@@ -5,29 +5,48 @@ import { sendListingRecommendationsEmail } from "@/lib/email";
 
 const MIN_RECOMMENDATION_INTERVAL_HOURS = 24;
 
-function isAuthorized(request: NextRequest) {
+function getAuthorizationResult(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
-    return false;
+    return { ok: false as const, reason: "missing-cron-secret" };
   }
 
   const bearer = request.headers.get("authorization");
   const headerSecret = request.headers.get("x-cron-secret");
   const userAgent = request.headers.get("user-agent")?.toLowerCase() ?? "";
+  const vercelCronHeader = request.headers.get("x-vercel-cron");
 
   const hasValidSecret = headerSecret === secret || bearer === `Bearer ${secret}`;
   if (!hasValidSecret) {
-    return false;
+    return { ok: false as const, reason: "invalid-secret" };
   }
 
-  // Vercel scheduled jobs use a vercel-cron user-agent.
-  return userAgent.includes("vercel-cron");
+  // Accept either Vercel cron marker header or user-agent marker.
+  const isVercelCron = Boolean(vercelCronHeader) || userAgent.includes("vercel-cron");
+  if (!isVercelCron) {
+    return { ok: false as const, reason: "missing-vercel-cron-marker" };
+  }
+
+  return { ok: true as const };
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  const auth = getAuthorizationResult(request);
+  if (!auth.ok) {
+    console.warn("[cron/recommendations] unauthorized request", {
+      reason: auth.reason,
+      hasAuthorization: Boolean(request.headers.get("authorization")),
+      hasXCronSecret: Boolean(request.headers.get("x-cron-secret")),
+      hasXVercelCron: Boolean(request.headers.get("x-vercel-cron")),
+      userAgent: request.headers.get("user-agent") ?? "",
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  console.info("[cron/recommendations] run started", {
+    hasXVercelCron: Boolean(request.headers.get("x-vercel-cron")),
+    userAgent: request.headers.get("user-agent") ?? "",
+  });
 
   const now = new Date();
   const minLastSentAt = new Date(now.getTime() - MIN_RECOMMENDATION_INTERVAL_HOURS * 60 * 60 * 1000);
@@ -123,6 +142,11 @@ export async function GET(request: NextRequest) {
       },
     });
   }
+
+  console.info("[cron/recommendations] run finished", {
+    processed: preferences.length,
+    emailsSent,
+  });
 
   return NextResponse.json({ ok: true, processed: preferences.length, emailsSent });
 }
