@@ -2,8 +2,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { ListingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-export const LISTING_PAYMENT_AMOUNT_USD = 14.99;
-export const LISTING_PAYMENT_CURRENCY = "USD";
+export const DEFAULT_LISTING_PAYMENT_AMOUNT = 450;
+export const LISTING_PAYMENT_AMOUNT_SETTING_KEY = "payments.listingFeeAmount";
+export const LISTING_PAYMENT_CURRENCY = "ZAR";
 
 type PaystackInitializeArgs = {
   email: string;
@@ -43,6 +44,38 @@ function getPaystackSecretKey() {
   }
 
   return secretKey;
+}
+
+export function formatPaymentCurrency(amount: number, currency = LISTING_PAYMENT_CURRENCY) {
+  return new Intl.NumberFormat("en-ZA", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
+export async function getListingPaymentAmount() {
+  const setting = await prisma.siteSettings.findUnique({
+    where: { key: LISTING_PAYMENT_AMOUNT_SETTING_KEY },
+  });
+
+  if (!setting) {
+    await prisma.siteSettings.create({
+      data: {
+        key: LISTING_PAYMENT_AMOUNT_SETTING_KEY,
+        value: String(DEFAULT_LISTING_PAYMENT_AMOUNT),
+      },
+    });
+
+    return DEFAULT_LISTING_PAYMENT_AMOUNT;
+  }
+
+  const amount = Number(setting.value);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return DEFAULT_LISTING_PAYMENT_AMOUNT;
+  }
+
+  return amount;
 }
 
 async function paystackRequest<T>(path: string, init?: RequestInit): Promise<T> {

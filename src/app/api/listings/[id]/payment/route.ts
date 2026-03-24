@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getPaystackCallbackUrl, initializePaystackTransaction, LISTING_PAYMENT_AMOUNT_USD } from "@/lib/payments";
+import {
+  getListingPaymentAmount,
+  getPaystackCallbackUrl,
+  initializePaystackTransaction,
+  LISTING_PAYMENT_CURRENCY,
+} from "@/lib/payments";
 
 export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -26,11 +31,13 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
   }
 
   const reference = `PAYSTACK-${listing.id.slice(-6)}-${Date.now()}`;
+  const listingPaymentAmount = await getListingPaymentAmount();
   const paymentSession = await initializePaystackTransaction({
     email: session.user.email,
-    amount: LISTING_PAYMENT_AMOUNT_USD,
+    amount: listingPaymentAmount,
     reference,
     callbackUrl: getPaystackCallbackUrl(),
+    currency: LISTING_PAYMENT_CURRENCY,
     metadata: {
       listingId: listing.id,
       userId: session.user.id,
@@ -40,8 +47,8 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
   return NextResponse.json({
     authorizationUrl: paymentSession.authorization_url,
     payment: {
-      amount: LISTING_PAYMENT_AMOUNT_USD,
-      currency: "USD",
+      amount: listingPaymentAmount,
+      currency: LISTING_PAYMENT_CURRENCY,
       reference: paymentSession.reference,
       simulated: false,
     },

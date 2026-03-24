@@ -15,7 +15,7 @@ type Row = {
   agent: { name: string | null };
 };
 
-export function ListingsTable({ listings }: { listings: Row[] }) {
+export function ListingsTable({ listings, listingFeeLabel }: { listings: Row[]; listingFeeLabel: string }) {
   return (
     <div className="overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-white">
       <table className="w-full text-left text-sm">
@@ -48,6 +48,7 @@ export function ListingsTable({ listings }: { listings: Row[] }) {
                     paymentStatus={listing.paymentStatus}
                     paymentExpiresAt={listing.paymentExpiresAt}
                     isTaken={listing.isTaken}
+                    paymentRequiredLabel={`Payment Required (${listingFeeLabel})`}
                   />
                 </td>
                 <td className="px-4 py-3"><Link href={`/admin/listings/${listing.id}`} className="text-[var(--primary)]">View</Link></td>

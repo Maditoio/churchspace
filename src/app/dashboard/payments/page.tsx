@@ -3,17 +3,9 @@ import { auth } from "@/lib/auth";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { getPaginationMeta, parsePageParam } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
-import { LISTING_PAYMENT_AMOUNT_USD } from "@/lib/payments";
+import { formatPaymentCurrency, getListingPaymentAmount, LISTING_PAYMENT_CURRENCY } from "@/lib/payments";
 
 const PAGE_SIZE = 12;
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
 
 export default async function DashboardPaymentsPage({
   searchParams,
@@ -28,6 +20,7 @@ export default async function DashboardPaymentsPage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
 
   const isAdmin = session.user.role === "SUPER_ADMIN";
+  const listingPaymentAmount = await getListingPaymentAmount();
 
   const where = isAdmin ? {} : { userId: session.user.id };
 
@@ -79,7 +72,7 @@ export default async function DashboardPaymentsPage({
 
       <div className="rounded-[var(--radius)] border border-[var(--border)] bg-white p-4 text-sm text-[var(--text-secondary)]">
         <p>
-          Listing fee is <strong>{formatCurrency(LISTING_PAYMENT_AMOUNT_USD)}</strong> per listing.
+          Listing fee is <strong>{formatPaymentCurrency(listingPaymentAmount)}</strong> per listing.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-[10px] bg-[var(--surface-raised)] px-3 py-2">
@@ -88,7 +81,7 @@ export default async function DashboardPaymentsPage({
           </div>
           <div className="rounded-[10px] bg-[var(--surface-raised)] px-3 py-2">
             <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Total Amount</p>
-            <p className="mt-1 text-base font-semibold text-[var(--text-primary)]">{formatCurrency(totalSpent)}</p>
+            <p className="mt-1 text-base font-semibold text-[var(--text-primary)]">{formatPaymentCurrency(totalSpent, LISTING_PAYMENT_CURRENCY)}</p>
           </div>
         </div>
       </div>
@@ -119,7 +112,7 @@ export default async function DashboardPaymentsPage({
                   <p className="font-medium text-[var(--text-primary)]">{payment.listing.title}</p>
                   <p className="text-xs text-[var(--text-secondary)]">/{payment.listing.slug}</p>
                 </td>
-                <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{formatCurrency(Number(payment.amount))}</td>
+                <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{formatPaymentCurrency(Number(payment.amount), payment.currency)}</td>
                 <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(payment.expiresAt).toLocaleDateString("en-ZA")}</td>
                 <td className="px-4 py-3 text-[var(--text-secondary)]">{payment.status}</td>
               </tr>

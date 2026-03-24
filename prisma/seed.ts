@@ -26,6 +26,12 @@ async function main() {
 
   const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
 
+  await prisma.siteSettings.upsert({
+    where: { key: "payments.listingFeeAmount" },
+    update: {},
+    create: { key: "payments.listingFeeAmount", value: "450" },
+  });
+
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: { role: Role.SUPER_ADMIN, password: hashedAdminPassword },

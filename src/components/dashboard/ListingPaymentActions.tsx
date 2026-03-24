@@ -12,11 +12,13 @@ export function ListingPaymentActions({
   isTaken,
   paymentStatus,
   paymentExpiresAt,
+  listingFeeLabel,
 }: {
   listingId: string;
   isTaken: boolean;
   paymentStatus: PaymentStatus;
   paymentExpiresAt?: Date | null;
+  listingFeeLabel: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -58,7 +60,7 @@ export function ListingPaymentActions({
         </Button>
       ) : (
         <Button type="button" variant="accent" className="h-9 min-w-0 px-3 text-xs" disabled={loading} onClick={pay}>
-          {isTaken ? "Pay $14.99 to Relist" : "Pay $14.99"}
+          {isTaken ? `Pay ${listingFeeLabel} to Relist` : `Pay ${listingFeeLabel}`}
         </Button>
       )}
     </div>

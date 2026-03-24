@@ -2,16 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { getPaginationMeta, parsePageParam } from "@/lib/pagination";
+import { formatPaymentCurrency, LISTING_PAYMENT_CURRENCY } from "@/lib/payments";
 
 const PAGE_SIZE = 12;
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
 
 export default async function AdminPaymentsPage({
   searchParams,
@@ -59,8 +52,8 @@ export default async function AdminPaymentsPage({
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <StatsCard label="Total Revenue" value={formatCurrency(totalRevenue)} />
-        <StatsCard label="Revenue This Month" value={formatCurrency(monthRevenue)} />
+        <StatsCard label="Total Revenue" value={formatPaymentCurrency(totalRevenue, LISTING_PAYMENT_CURRENCY)} />
+        <StatsCard label="Revenue This Month" value={formatPaymentCurrency(monthRevenue, LISTING_PAYMENT_CURRENCY)} />
         <StatsCard label="Total Payments" value={aggregateAll._count._all} />
         <StatsCard label="Unique Payers" value={uniquePayers} />
       </div>
@@ -95,7 +88,7 @@ export default async function AdminPaymentsPage({
                   <p className="text-xs text-(--text-secondary)">/{payment.listing.slug}</p>
                 </td>
                 <td className="px-4 py-3 font-medium text-foreground">
-                  {formatCurrency(Number(payment.amount))}
+                  {formatPaymentCurrency(Number(payment.amount), payment.currency)}
                 </td>
                 <td className="px-4 py-3 text-(--text-secondary)">{payment.status}</td>
                 <td className="px-4 py-3 text-xs text-(--text-secondary)">{payment.reference}</td>
