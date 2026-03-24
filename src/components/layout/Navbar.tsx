@@ -2,15 +2,31 @@
 
 import Link from "next/link";
 import type { Session } from "next-auth";
-import { Menu, X, LogOut } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, LogOut, Bell, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 
 export function Navbar({ session }: { session: Session | null }) {
   const [open, setOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const isAdmin = session?.user?.role === "SUPER_ADMIN";
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [dropdownOpen]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-(--border) bg-(--surface-glass) backdrop-blur-xl">
@@ -33,25 +49,67 @@ export function Navbar({ session }: { session: Session | null }) {
         </div>
 
         {/* Desktop auth */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-4 md:flex">
           <Link href="/dashboard/listings/new"><Button variant="outlineAccent">List a Space</Button></Link>
           {session ? (
-            <div className="flex items-center gap-2 rounded-full border border-(--border) bg-white/78 p-1.5 shadow-(--shadow-sm)">
-              <Link
-                href={isAdmin ? "/admin" : "/dashboard"}
-                className="flex items-center gap-3 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(244,239,230,0.95))] px-3 py-2 text-sm text-(--text-secondary) transition-transform hover:-translate-y-0.5 hover:text-(--primary)"
-              >
-                <Avatar src={session.user?.image} name={session.user?.name} size={34} />
-                <span className="max-w-32 truncate font-semibold text-(--text-primary)">{session.user?.name ?? "Dashboard"}</span>
-              </Link>
+            <div className="flex items-center gap-3">
+              {/* Notifications icon */}
               <button
-                aria-label="Sign out"
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-[rgba(123,84,42,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(247,242,235,0.96))] px-4 text-sm font-semibold text-(--text-primary) shadow-[var(--shadow-sm)] transition-all hover:-translate-y-0.5 hover:border-[rgba(123,84,42,0.28)] hover:text-(--primary)"
-                onClick={() => signOut({ callbackUrl: "/" })}
+                aria-label="Notifications"
+                className="rounded-full border border-(--border) bg-white/70 p-2.5 transition-all hover:bg-(--primary-soft) hover:text-(--primary) shadow-(--shadow-sm)"
               >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
+                <Bell className="h-5 w-5 text-(--text-secondary)" />
               </button>
+
+              {/* Avatar dropdown trigger */}
+              <div ref={dropdownRef} className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 rounded-full border border-(--border) bg-white/78 p-1.5 transition-all hover:bg-(--primary-soft) shadow-(--shadow-sm)"
+                >
+                  <Avatar src={session.user?.image} name={session.user?.name} size={34} />
+                  <ChevronDown className="h-4 w-4 text-(--text-secondary)" />
+                </button>
+
+                {/* Dropdown menu */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-[20px] border border-(--border) bg-white shadow-(--shadow-lg) z-50">
+                    <nav className="flex flex-col">
+                      <Link
+                        href={isAdmin ? "/admin" : "/dashboard"}
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border) first:rounded-t-[20px]"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/dashboard/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border)"
+                      >
+                        Profile
+                      </Link>
+                      <Link
+                        href="/support"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border)"
+                      >
+                        Support
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          signOut({ callbackUrl: "/" });
+                        }}
+                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) last:rounded-b-[20px]"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </nav>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <Link href="/signin"><Button variant="ghost">Sign In</Button></Link>
@@ -85,6 +143,7 @@ export function Navbar({ session }: { session: Session | null }) {
                 </div>
                 <Link href="/dashboard/alerts" onClick={() => setOpen(false)}>Listing Alerts</Link>
                 <Link href="/dashboard/profile" onClick={() => setOpen(false)}>Profile</Link>
+                <Link href="/support" onClick={() => setOpen(false)}>Support</Link>
                 <button
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(123,84,42,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(247,242,235,0.96))] px-4 py-3 text-sm font-semibold text-(--text-primary) shadow-(--shadow-sm)"
                   onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
