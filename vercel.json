@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/cron/recommendations",
-      "schedule": "5 7 * * *"
+      "schedule": "25 7 * * *"
     }
   ]
 }
