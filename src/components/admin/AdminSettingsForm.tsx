@@ -14,7 +14,6 @@ type SettingsItem = {
 export function AdminSettingsForm({ initialSettings }: { initialSettings: SettingsItem[] }) {
   const [settings, setSettings] = useState<SettingsItem[]>(initialSettings);
   const [saving, setSaving] = useState(false);
-  const [runningCron, setRunningCron] = useState(false);
 
   const hasEmptyKeys = useMemo(() => settings.some((item) => item.key.trim().length === 0), [settings]);
 
@@ -51,22 +50,6 @@ export function AdminSettingsForm({ initialSettings }: { initialSettings: Settin
     toast.success("Settings updated");
   }
 
-  async function handleTriggerRecommendationsCron() {
-    setRunningCron(true);
-    const res = await fetch("/api/admin/cron/recommendations/trigger?troubleshoot=1", {
-      method: "POST",
-    });
-    setRunningCron(false);
-
-    const payload = await res.json().catch(() => null);
-    if (!res.ok) {
-      toast.error(payload?.error ?? "Could not trigger recommendations cron");
-      return;
-    }
-
-    toast.success(`Cron completed. Processed ${payload?.processed ?? 0}, emails sent ${payload?.emailsSent ?? 0}.`);
-  }
-
   return (
     <div className="space-y-4 rounded-[var(--radius)] border border-[var(--border)] bg-white p-6">
       {settings.length ? (
@@ -91,9 +74,6 @@ export function AdminSettingsForm({ initialSettings }: { initialSettings: Settin
       <div className="flex flex-wrap gap-3">
         <Button type="button" variant="secondary" onClick={addItem}>Add Setting</Button>
         <Button type="button" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
-        <Button type="button" variant="ghost" onClick={handleTriggerRecommendationsCron} disabled={runningCron}>
-          {runningCron ? "Running Cron..." : "Run Recommendations Cron"}
-        </Button>
       </div>
     </div>
   );

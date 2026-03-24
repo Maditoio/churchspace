@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runRecommendationsCron } from "@/lib/recommendations-cron";
+import { markRecommendationsCronFailure, runRecommendationsCron } from "@/lib/recommendations-cron";
 
 function getAuthorizationResult(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -50,6 +50,13 @@ export async function GET(request: NextRequest) {
     userAgent: request.headers.get("user-agent") ?? "",
   });
 
-  const result = await runRecommendationsCron("scheduled");
-  return NextResponse.json({ ok: true, ...result });
+  try {
+    const result = await runRecommendationsCron("scheduled");
+    return NextResponse.json({ ok: true, ...result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    await markRecommendationsCronFailure("scheduled", message);
+    console.error("[cron/recommendations] run failed", { message });
+    return NextResponse.json({ error: "Cron execution failed" }, { status: 500 });
+  }
 }

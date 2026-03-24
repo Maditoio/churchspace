@@ -1,6 +1,7 @@
 import { ListingStatus } from "@prisma/client";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { ApprovalQueue } from "@/components/admin/ApprovalQueue";
+import { CronRecommendationsStatus } from "@/components/admin/CronRecommendationsStatus";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminPage() {
@@ -27,6 +28,7 @@ export default async function AdminPage() {
         <StatsCard label="Pending Review" value={pending} />
         <StatsCard label="Monthly Enquiries" value={monthlyEnquiries} />
       </div>
+      <CronRecommendationsStatus />
       <section>
         <h2 className="mb-4 font-display text-3xl text-[var(--text-primary)]">Pending Listings Queue</h2>
         <ApprovalQueue listings={pendingListings.map((item) => ({ id: item.id, title: item.title, createdAt: item.createdAt, agent: { name: item.agent.name }, listingType: item.listingType as string[] }))} />

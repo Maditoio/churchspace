@@ -10,6 +10,45 @@ type RunRecommendationsCronOptions = {
   debug?: boolean;
 };
 
+type CronStatusPayload = {
+  source: "scheduled" | "manual-admin";
+  status: "ok" | "error";
+  processed?: number;
+  matchedPreferences?: number;
+  emailsSent?: number;
+  errorMessage?: string;
+};
+
+async function persistRecommendationsCronStatus(payload: CronStatusPayload) {
+  const entries: Array<{ key: string; value: string }> = [
+    { key: "cron.recommendations.lastRunAt", value: new Date().toISOString() },
+    { key: "cron.recommendations.lastRunSource", value: payload.source },
+    { key: "cron.recommendations.lastRunStatus", value: payload.status },
+    { key: "cron.recommendations.lastRunProcessed", value: String(payload.processed ?? 0) },
+    { key: "cron.recommendations.lastRunMatchedPreferences", value: String(payload.matchedPreferences ?? 0) },
+    { key: "cron.recommendations.lastRunEmailsSent", value: String(payload.emailsSent ?? 0) },
+    { key: "cron.recommendations.lastRunError", value: payload.errorMessage ?? "" },
+  ];
+
+  await prisma.$transaction(
+    entries.map((entry) =>
+      prisma.siteSettings.upsert({
+        where: { key: entry.key },
+        update: { value: entry.value },
+        create: { key: entry.key, value: entry.value },
+      }),
+    ),
+  );
+}
+
+export async function markRecommendationsCronFailure(source: "scheduled" | "manual-admin", errorMessage: string) {
+  await persistRecommendationsCronStatus({
+    source,
+    status: "error",
+    errorMessage,
+  });
+}
+
 export async function runRecommendationsCron(
   source: "scheduled" | "manual-admin",
   options: RunRecommendationsCronOptions = {},
@@ -165,6 +204,14 @@ export async function runRecommendationsCron(
     ignoreInterval,
     includeExistingListings,
     debug,
+    processed: preferences.length,
+    matchedPreferences,
+    emailsSent,
+  });
+
+  await persistRecommendationsCronStatus({
+    source,
+    status: "ok",
     processed: preferences.length,
     matchedPreferences,
     emailsSent,
