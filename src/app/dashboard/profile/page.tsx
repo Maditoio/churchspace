@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { formatListingTypeLabel, formatPropertyTypeLabel, formatSavedAlertField } from "@/lib/search-preferences";
 import { toast } from "sonner";
 
 type ProfileData = {
@@ -21,11 +22,14 @@ type ProfileData = {
 };
 
 type AlertPreference = {
+  id: string;
+  createdAt: string;
   query: string | null;
   city: string | null;
   suburb: string | null;
   propertyType: string | null;
   listingType: string | null;
+  lastRecommendationSentAt: string | null;
 };
 
 const MAX_AVATAR_BYTES = 8 * 1024 * 1024;
@@ -97,8 +101,9 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [alertsLoading, setAlertsLoading] = useState(true);
-  const [alertPreference, setAlertPreference] = useState<AlertPreference | null>(null);
-  const [deletingAlert, setDeletingAlert] = useState(false);
+  const [alertPreferences, setAlertPreferences] = useState<AlertPreference[]>([]);
+  const [totalAlerts, setTotalAlerts] = useState(0);
+  const [deletingAlertId, setDeletingAlertId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -109,7 +114,7 @@ export default function ProfilePage() {
         }
         return r.json();
       }),
-      fetch("/api/users/search-preferences")
+      fetch("/api/users/search-preferences?page=1&pageSize=4")
         .then(async (r) => {
           if (r.status === 401) {
             router.replace("/signin?callbackUrl=/dashboard/profile");
@@ -133,18 +138,9 @@ export default function ProfilePage() {
           });
         }
 
-        const preference = preferenceData?.preference;
-        if (preference) {
-          setAlertPreference({
-            query: preference.query ?? null,
-            city: preference.city ?? null,
-            suburb: preference.suburb ?? null,
-            propertyType: preference.propertyType ?? null,
-            listingType: preference.listingType ?? null,
-          });
-        } else {
-          setAlertPreference(null);
-        }
+        const preferences = Array.isArray(preferenceData?.preferences) ? preferenceData.preferences : [];
+        setAlertPreferences(preferences);
+        setTotalAlerts(preferenceData?.pagination?.totalItems ?? preferences.length);
       })
       .catch(() => {})
       .finally(() => {
@@ -228,15 +224,15 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleDeleteAlert() {
-    const confirmed = window.confirm("Delete your saved listing alert? You will stop receiving alert emails until you create a new alert.");
+  async function handleDeleteAlert(alertId: string) {
+    const confirmed = window.confirm("Delete this saved listing alert? You will stop receiving matching alert emails for it.");
     if (!confirmed) {
       return;
     }
 
-    setDeletingAlert(true);
+    setDeletingAlertId(alertId);
     try {
-      const res = await fetch("/api/users/search-preferences", { method: "DELETE" });
+      const res = await fetch(`/api/users/search-preferences/${alertId}`, { method: "DELETE" });
       if (res.status === 401) {
         router.replace("/signin?callbackUrl=/dashboard/profile");
         return;
@@ -244,20 +240,21 @@ export default function ProfilePage() {
       if (!res.ok) {
         throw new Error("Failed to delete alert");
       }
-      setAlertPreference(null);
+      setAlertPreferences((prev) => prev.filter((alert) => alert.id !== alertId));
+      setTotalAlerts((prev) => Math.max(prev - 1, 0));
       toast.success("Alert deleted");
     } catch {
       toast.error("Could not delete alert");
     } finally {
-      setDeletingAlert(false);
+      setDeletingAlertId(null);
     }
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-5xl text-(--text-primary)">Profile Settings</h1>
+      <h1 className="font-display text-5xl text-foreground">Profile Settings</h1>
       <div className="rounded-(--radius) border border-(--border) bg-white p-6">
-        <p className="mb-4 text-sm font-medium text-(--text-primary)">Avatar Photo</p>
+        <p className="mb-4 text-sm font-medium text-foreground">Avatar Photo</p>
         <div className="flex flex-wrap items-center gap-4">
           {profile.avatarThumb || profile.avatar ? (
             <Image
@@ -268,7 +265,7 @@ export default function ProfilePage() {
               className="rounded-full border border-(--border) object-cover"
             />
           ) : (
-            <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-(--border) bg-(--accent-light) text-xs font-semibold text-(--primary)">
+            <div className="flex h-18 w-18 items-center justify-center rounded-full border border-(--border) bg-(--accent-light) text-xs font-semibold text-(--primary)">
               {profile.name?.slice(0, 2).toUpperCase() || "CS"}
             </div>
           )}
@@ -291,27 +288,46 @@ export default function ProfilePage() {
       </form>
       <div className="space-y-3 rounded-(--radius) border border-(--border) bg-white p-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold text-(--text-primary)">Manage Listing Alerts</h2>
+          <h2 className="text-lg font-semibold text-foreground">Manage Listing Alerts</h2>
           <Button type="button" variant="secondary" onClick={() => router.push("/dashboard/alerts")}>Edit Alerts</Button>
         </div>
 
         {alertsLoading ? (
           <p className="text-sm text-(--text-muted)">Loading alert settings...</p>
-        ) : alertPreference ? (
+        ) : alertPreferences.length ? (
           <div className="space-y-3">
-            <div className="grid gap-2 text-sm text-(--text-secondary) md:grid-cols-2">
-              <p><strong>Suburb:</strong> {alertPreference.suburb ?? "-"}</p>
-              <p><strong>City:</strong> {alertPreference.city ?? "-"}</p>
-              <p><strong>Property Type:</strong> {alertPreference.propertyType?.replaceAll("_", " ") ?? "-"}</p>
-              <p><strong>Listing Type:</strong> {alertPreference.listingType ?? "-"}</p>
-              <p className="md:col-span-2"><strong>Keyword:</strong> {alertPreference.query ?? "-"}</p>
+            <p className="text-sm text-(--text-secondary)">
+              {totalAlerts} saved alert{totalAlerts === 1 ? "" : "s"}. Showing the most recent {alertPreferences.length}.
+            </p>
+            <div className="space-y-3">
+              {alertPreferences.map((alert) => (
+                <div key={alert.id} className="rounded-[20px] border border-(--border) bg-(--surface-raised) p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="grid gap-2 text-sm text-(--text-secondary) md:grid-cols-2">
+                      <p><strong className="text-foreground">Suburb:</strong> {formatSavedAlertField(alert.suburb)}</p>
+                      <p><strong className="text-foreground">City:</strong> {formatSavedAlertField(alert.city)}</p>
+                      <p><strong className="text-foreground">Property Type:</strong> {formatPropertyTypeLabel(alert.propertyType)}</p>
+                      <p><strong className="text-foreground">Listing Type:</strong> {formatListingTypeLabel(alert.listingType)}</p>
+                      <p className="md:col-span-2"><strong className="text-foreground">Keyword:</strong> {formatSavedAlertField(alert.query)}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleDeleteAlert(alert.id)}
+                      disabled={deletingAlertId === alert.id}
+                    >
+                      {deletingAlertId === alert.id ? "Deleting..." : "Delete"}
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <Button type="button" variant="ghost" onClick={handleDeleteAlert} disabled={deletingAlert}>
-              {deletingAlert ? "Deleting..." : "Delete Alert"}
-            </Button>
+            {totalAlerts > alertPreferences.length ? (
+              <p className="text-sm text-(--text-muted)">Open Alerts to view and manage the full list.</p>
+            ) : null}
           </div>
         ) : (
-          <p className="text-sm text-(--text-muted)">No active listing alert. Create one from Alerts.</p>
+          <p className="text-sm text-(--text-muted)">No active listing alerts. Create one from Alerts.</p>
         )}
       </div>
     </div>

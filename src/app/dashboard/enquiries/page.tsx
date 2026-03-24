@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { PaginationControls } from "@/components/ui/PaginationControls";
+import { parsePageParam } from "@/lib/pagination";
 import { toast } from "sonner";
 
 type Enquiry = {
@@ -14,13 +16,29 @@ type Enquiry = {
   listing: { title: string };
 };
 
+type EnquiryPagination = {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
 export default function DashboardEnquiriesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pagination, setPagination] = useState<EnquiryPagination>({
+    currentPage: 1,
+    pageSize: 10,
+    totalItems: 0,
+    totalPages: 1,
+  });
+  const currentPage = parsePageParam(searchParams.get("page"));
 
   useEffect(() => {
-    fetch("/api/enquiries")
+    fetch(`/api/enquiries?page=${currentPage}`)
       .then(async (r) => {
         if (r.status === 401) {
           router.replace("/signin?callbackUrl=/dashboard/enquiries");
@@ -32,10 +50,29 @@ export default function DashboardEnquiriesPage() {
         if (!data) return;
         const items = Array.isArray(data) ? data : Array.isArray(data?.enquiries) ? data.enquiries : [];
         setEnquiries(items);
+        if (data?.pagination) {
+          setPagination(data.pagination);
+
+          if (data.pagination.currentPage !== currentPage) {
+            const params = new URLSearchParams(searchParams.toString());
+
+            if (data.pagination.currentPage > 1) {
+              params.set("page", String(data.pagination.currentPage));
+            } else {
+              params.delete("page");
+            }
+
+            const query = params.toString();
+            router.replace(query ? `/dashboard/enquiries?${query}` : "/dashboard/enquiries", { scroll: false });
+          }
+        }
       })
       .catch(() => toast.error("Could not load enquiries"))
-      .finally(() => setLoading(false));
-  }, [router]);
+      .finally(() => {
+        setLoading(false);
+        setIsRefreshing(false);
+      });
+  }, [currentPage, router, searchParams]);
 
   async function markRead(id: string) {
     const res = await fetch(`/api/enquiries/${id}/read`, { method: "PATCH" });
@@ -48,10 +85,25 @@ export default function DashboardEnquiriesPage() {
     }
   }
 
+  function handlePageChange(page: number) {
+    setIsRefreshing(true);
+
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (page > 1) {
+      params.set("page", String(page));
+    } else {
+      params.delete("page");
+    }
+
+    const query = params.toString();
+    router.push(query ? `/dashboard/enquiries?${query}` : "/dashboard/enquiries", { scroll: false });
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="font-display text-5xl text-foreground">Enquiries</h1>
-      {loading ? (
+      {loading || isRefreshing ? (
         <p className="text-sm text-(--text-secondary)">Loading…</p>
       ) : (
         <div className="overflow-x-auto rounded-(--radius) border border-(--border) bg-white">
@@ -107,6 +159,14 @@ export default function DashboardEnquiriesPage() {
               )}
             </tbody>
           </table>
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            itemLabel="enquiries"
+            onPageChange={handlePageChange}
+            pageSize={pagination.pageSize}
+            totalItems={pagination.totalItems}
+            totalPages={pagination.totalPages}
+          />
         </div>
       )}
     </div>

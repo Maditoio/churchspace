@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Session } from "next-auth";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
@@ -36,17 +36,27 @@ export function Navbar({ session }: { session: Session | null }) {
         <div className="hidden items-center gap-3 md:flex">
           <Link href="/dashboard/listings/new"><Button variant="outlineAccent">List a Space</Button></Link>
           {session ? (
-            <div className="flex items-center gap-2 rounded-full border border-(--border) bg-white/72 p-1.5 shadow-(--shadow-sm)">
-              <Link href={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-2 rounded-full px-2 py-1 text-sm text-(--text-secondary) hover:text-(--primary)">
-                <Avatar src={session.user?.image} name={session.user?.name} size={32} />
-                <span className="max-w-28 truncate">{session.user?.name ?? "Dashboard"}</span>
+            <div className="flex items-center gap-2 rounded-full border border-(--border) bg-white/78 p-1.5 shadow-(--shadow-sm)">
+              <Link
+                href={isAdmin ? "/admin" : "/dashboard"}
+                className="flex items-center gap-3 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(244,239,230,0.95))] px-3 py-2 text-sm text-(--text-secondary) transition-transform hover:-translate-y-0.5 hover:text-(--primary)"
+              >
+                <Avatar src={session.user?.image} name={session.user?.name} size={34} />
+                <span className="min-w-0">
+                  <span className="block max-w-32 truncate font-semibold text-(--text-primary)">{session.user?.name ?? "Dashboard"}</span>
+                  <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">
+                    {isAdmin ? <ShieldCheck className="h-3.5 w-3.5" /> : <LayoutDashboard className="h-3.5 w-3.5" />}
+                    {isAdmin ? "Admin Suite" : "Member Access"}
+                  </span>
+                </span>
               </Link>
               <button
                 aria-label="Sign out"
-                className="rounded-full p-2 text-(--text-secondary) hover:bg-(--surface-raised) hover:text-(--primary)"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[rgba(123,84,42,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(247,242,235,0.96))] px-4 text-sm font-semibold text-(--text-primary) shadow-[var(--shadow-sm)] transition-all hover:-translate-y-0.5 hover:border-[rgba(123,84,42,0.28)] hover:text-(--primary)"
                 onClick={() => signOut({ callbackUrl: "/" })}
               >
                 <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
               </button>
             </div>
           ) : (
@@ -73,13 +83,22 @@ export function Navbar({ session }: { session: Session | null }) {
             </Link>
             {session ? (
               <>
-                <Link href={isAdmin ? "/admin" : "/dashboard"} onClick={() => setOpen(false)} className="flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4" /> {isAdmin ? "Admin Panel" : "Dashboard"}
-                </Link>
+                <div className="rounded-[24px] border border-(--border) bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,239,230,0.96))] p-4 shadow-(--shadow-sm)">
+                  <Link href={isAdmin ? "/admin" : "/dashboard"} onClick={() => setOpen(false)} className="flex items-center gap-3">
+                    <Avatar src={session.user?.image} name={session.user?.name} size={40} />
+                    <span>
+                      <span className="block font-semibold text-(--text-primary)">{session.user?.name ?? (isAdmin ? "Admin Panel" : "Dashboard")}</span>
+                      <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">
+                        {isAdmin ? <ShieldCheck className="h-3.5 w-3.5" /> : <LayoutDashboard className="h-3.5 w-3.5" />}
+                        {isAdmin ? "Admin Suite" : "Member Access"}
+                      </span>
+                    </span>
+                  </Link>
+                </div>
                 <Link href="/dashboard/alerts" onClick={() => setOpen(false)}>Listing Alerts</Link>
                 <Link href="/dashboard/profile" onClick={() => setOpen(false)}>Profile</Link>
                 <button
-                  className="flex items-center gap-2 text-sm text-(--destructive)"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(123,84,42,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(247,242,235,0.96))] px-4 py-3 text-sm font-semibold text-(--text-primary) shadow-(--shadow-sm)"
                   onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
                 >
                   <LogOut className="h-4 w-4" /> Sign Out

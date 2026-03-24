@@ -3,19 +3,28 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { enquirySchema } from "@/lib/validations";
 import { sendEnquiryEmails } from "@/lib/email";
+import { getPaginationMeta, parsePageParam } from "@/lib/pagination";
 
-export async function GET() {
+const PAGE_SIZE = 10;
+
+export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const isAdmin = session.user.role === "SUPER_ADMIN";
+  const where = isAdmin ? {} : { listing: { agentId: session.user.id } };
+  const requestedPage = parsePageParam(request.nextUrl.searchParams.get("page"));
+  const totalEnquiries = await prisma.enquiry.count({ where });
+  const pagination = getPaginationMeta(totalEnquiries, requestedPage, PAGE_SIZE);
   const enquiries = await prisma.enquiry.findMany({
-    where: isAdmin ? {} : { listing: { agentId: session.user.id } },
+    where,
     include: { listing: true },
     orderBy: { createdAt: "desc" },
+    skip: pagination.skip,
+    take: PAGE_SIZE,
   });
 
-  return NextResponse.json({ enquiries });
+  return NextResponse.json({ enquiries, pagination });
 }
 
 export async function POST(request: NextRequest) {

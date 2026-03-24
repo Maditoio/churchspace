@@ -72,7 +72,7 @@ model User {
   accounts      Account[]
   savedListings SavedListing[]
   sentEnquiries Enquiry[] @relation("EnquirySender")
-  searchPreference UserSearchPreference?
+  searchPreferences UserSearchPreference[]
   notifications Notification[]
 }
 
@@ -270,7 +270,8 @@ model PasswordResetToken {
 
 model UserSearchPreference {
   id                       String       @id @default(cuid())
-  userId                   String       @unique
+  userId                   String
+  fingerprint              String
   query                    String?
   city                     String?
   suburb                   String?
@@ -283,4 +284,5 @@ model UserSearchPreference {
   user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([lastSearchedAt])
+  @@unique([userId, fingerprint])
 }

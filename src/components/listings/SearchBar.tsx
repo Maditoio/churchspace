@@ -12,28 +12,11 @@ export function SearchBar() {
   const [suburb, setSuburb] = useState(params.get("suburb") ?? "");
   const [city, setCity] = useState(params.get("city") ?? "");
 
-  const persistPreference = async () => {
-    try {
-      await fetch("/api/users/search-preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: q,
-          suburb,
-          city,
-        }),
-      });
-    } catch {
-      // Ignore persistence errors to keep search fast.
-    }
-  };
-
   const onSubmit = () => {
     const search = new URLSearchParams();
     if (q) search.set("q", q);
     if (suburb) search.set("suburb", suburb);
     if (city) search.set("city", city);
-    void persistPreference();
     router.push(`/search?${search.toString()}`);
   };
 

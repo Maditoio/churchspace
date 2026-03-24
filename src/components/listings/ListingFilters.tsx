@@ -20,32 +20,16 @@ export function ListingFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const persistPreference = async (payload: { suburb?: string; city?: string; type?: string; purpose?: string }) => {
-    try {
-      await fetch("/api/users/search-preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      // Ignore persistence errors to keep filtering responsive.
-    }
-  };
-
   const applyFilter = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const params = new URLSearchParams(searchParams.toString());
-    const payload: { suburb?: string; city?: string; type?: string; purpose?: string } = {};
-
     for (const key of ["suburb", "city", "type", "purpose"] as const) {
       const value = formData.get(key)?.toString();
       if (value) params.set(key, value);
       else params.delete(key);
-      if (value) payload[key] = value;
     }
 
-    void persistPreference(payload);
     router.push(`/listings?${params.toString()}`);
   };
 

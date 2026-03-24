@@ -1,17 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getPaginationMeta, parsePageParam } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
+import { hasSearchPreferenceCriteria, normalizeSearchPreferenceInput } from "@/lib/search-preferences";
 import { searchPreferenceSchema } from "@/lib/validations";
 
-export async function GET() {
+const DEFAULT_PAGE_SIZE = 6;
+const MAX_PAGE_SIZE = 24;
+
+function parsePageSizeParam(value: string | null) {
+  const parsed = Number.parseInt(value ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return DEFAULT_PAGE_SIZE;
+  }
+
+  return Math.min(parsed, MAX_PAGE_SIZE);
+}
+
+export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const preference = await prisma.userSearchPreference.findUnique({
+  const pageSize = parsePageSizeParam(request.nextUrl.searchParams.get("pageSize"));
+  const totalItems = await prisma.userSearchPreference.count({ where: { userId: session.user.id } });
+  const pagination = getPaginationMeta(totalItems, parsePageParam(request.nextUrl.searchParams.get("page")), pageSize);
+
+  const preferences = await prisma.userSearchPreference.findMany({
     where: { userId: session.user.id },
     select: {
+      id: true,
+      createdAt: true,
       query: true,
       city: true,
       suburb: true,
@@ -20,9 +41,16 @@ export async function GET() {
       lastSearchedAt: true,
       lastRecommendationSentAt: true,
     },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    skip: pagination.skip,
+    take: pageSize,
   });
 
-  return NextResponse.json({ preference });
+  return NextResponse.json({
+    pagination,
+    preference: preferences[0] ?? null,
+    preferences,
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -37,45 +65,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid search preference." }, { status: 400 });
   }
 
-  const query = parsed.data.query?.trim() || null;
-  const city = parsed.data.city?.trim() || null;
-  const suburb = parsed.data.suburb?.trim() || parsed.data.area?.trim() || null;
-  const propertyType = parsed.data.type ?? null;
-  const listingType = parsed.data.purpose ?? null;
+  const normalized = normalizeSearchPreferenceInput(parsed.data);
 
-  await prisma.userSearchPreference.upsert({
-    where: { userId: session.user.id },
+  if (!hasSearchPreferenceCriteria(normalized)) {
+    return NextResponse.json({ error: "Add at least one alert filter." }, { status: 400 });
+  }
+
+  const preference = await prisma.userSearchPreference.upsert({
+    where: {
+      userId_fingerprint: {
+        userId: session.user.id,
+        fingerprint: normalized.fingerprint,
+      },
+    },
     create: {
       userId: session.user.id,
-      query,
-      city,
-      suburb,
-      propertyType,
-      listingType,
+      fingerprint: normalized.fingerprint,
+      query: normalized.query,
+      city: normalized.city,
+      suburb: normalized.suburb,
+      propertyType: normalized.propertyType,
+      listingType: normalized.listingType,
       lastSearchedAt: new Date(),
     },
     update: {
-      query,
-      city,
-      suburb,
-      propertyType,
-      listingType,
+      query: normalized.query,
+      city: normalized.city,
+      suburb: normalized.suburb,
+      propertyType: normalized.propertyType,
+      listingType: normalized.listingType,
       lastSearchedAt: new Date(),
     },
   });
 
-  return NextResponse.json({ ok: true });
-}
-
-export async function DELETE() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  await prisma.userSearchPreference.deleteMany({
-    where: { userId: session.user.id },
-  });
-
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, preference });
 }

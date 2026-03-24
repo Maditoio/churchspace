@@ -30,22 +30,30 @@ export function ListingsTable({ listings }: { listings: Row[] }) {
           </tr>
         </thead>
         <tbody>
-          {listings.map((listing) => (
-            <tr key={listing.id} className="border-t border-[var(--border-subtle)]">
-              <td className="px-4 py-3">{listing.title}</td>
-              <td className="px-4 py-3">{listing.agent.name ?? "-"}</td>
-              <td className="px-4 py-3">{listing.city}</td>
-              <td className="px-4 py-3"><ListingStatusBadge status={listing.status} /></td>
-              <td className="px-4 py-3">
-                <ListingPaymentBadge
-                  paymentStatus={listing.paymentStatus}
-                  paymentExpiresAt={listing.paymentExpiresAt}
-                  isTaken={listing.isTaken}
-                />
+          {listings.length === 0 ? (
+            <tr>
+              <td className="px-4 py-8 text-center text-[var(--text-secondary)]" colSpan={6}>
+                No listings found.
               </td>
-              <td className="px-4 py-3"><Link href={`/admin/listings/${listing.id}`} className="text-[var(--primary)]">View</Link></td>
             </tr>
-          ))}
+          ) : (
+            listings.map((listing) => (
+              <tr key={listing.id} className="border-t border-[var(--border-subtle)]">
+                <td className="px-4 py-3">{listing.title}</td>
+                <td className="px-4 py-3">{listing.agent.name ?? "-"}</td>
+                <td className="px-4 py-3">{listing.city}</td>
+                <td className="px-4 py-3"><ListingStatusBadge status={listing.status} /></td>
+                <td className="px-4 py-3">
+                  <ListingPaymentBadge
+                    paymentStatus={listing.paymentStatus}
+                    paymentExpiresAt={listing.paymentExpiresAt}
+                    isTaken={listing.isTaken}
+                  />
+                </td>
+                <td className="px-4 py-3"><Link href={`/admin/listings/${listing.id}`} className="text-[var(--primary)]">View</Link></td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

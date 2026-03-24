@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { PaginationControls } from "@/components/ui/PaginationControls";
+import { getPaginationMeta, parsePageParam } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { LISTING_PAYMENT_AMOUNT_USD } from "@/lib/payments";
+
+const PAGE_SIZE = 12;
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -14,7 +18,7 @@ function formatCurrency(amount: number) {
 export default async function DashboardPaymentsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ payment?: string; reference?: string }>;
+  searchParams?: Promise<{ page?: string; payment?: string; reference?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -27,6 +31,9 @@ export default async function DashboardPaymentsPage({
 
   const where = isAdmin ? {} : { userId: session.user.id };
 
+  const totalPayments = await prisma.listingPayment.count({ where });
+  const pagination = getPaginationMeta(totalPayments, parsePageParam(resolvedSearchParams?.page), PAGE_SIZE);
+
   const [payments, aggregate] = await Promise.all([
     prisma.listingPayment.findMany({
       where,
@@ -35,7 +42,8 @@ export default async function DashboardPaymentsPage({
         user: { select: { name: true, email: true } },
       },
       orderBy: { paidAt: "desc" },
-      take: 100,
+      skip: pagination.skip,
+      take: PAGE_SIZE,
     }),
     prisma.listingPayment.aggregate({
       where,
@@ -125,6 +133,18 @@ export default async function DashboardPaymentsPage({
             ) : null}
           </tbody>
         </table>
+        <PaginationControls
+          basePath="/dashboard/payments"
+          currentPage={pagination.currentPage}
+          itemLabel="payments"
+          pageSize={pagination.pageSize}
+          query={{
+            payment: resolvedSearchParams?.payment,
+            reference: resolvedSearchParams?.reference,
+          }}
+          totalItems={pagination.totalItems}
+          totalPages={pagination.totalPages}
+        />
       </div>
     </div>
   );
