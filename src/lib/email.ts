@@ -1,7 +1,12 @@
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://churchspace.co.za";
+const configuredBaseUrl =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXTAUTH_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ??
+  "https://churchspace.co.za";
+const appBaseUrl = configuredBaseUrl.replace(/\/$/, "");
 
 const brandStyles = `
   font-family: 'DM Sans', Arial, sans-serif;
@@ -179,7 +184,7 @@ export async function sendListingRecommendationsEmail(args: {
   to: string;
   name?: string | null;
   filters: { city?: string | null; suburb?: string | null; query?: string | null; type?: string | null; purpose?: string | null };
-  listings: Array<{ title: string; city: string; suburb: string; slug: string }>;
+  listings: Array<{ title: string; city: string; suburb: string; slug: string; imageUrl?: string | null; priceLabel?: string | null }>;
 }) {
   const filterChips = [
     args.filters.suburb ? `<li><strong>Area/Suburb:</strong> ${args.filters.suburb}</li>` : "",
@@ -191,8 +196,25 @@ export async function sendListingRecommendationsEmail(args: {
 
   const listingItems = args.listings
     .map(
-      (listing) =>
-        `<li style="margin-bottom:10px;"><a href="${appBaseUrl}/listings/${listing.slug}" style="color:#1A1A2E;text-decoration:none;font-weight:600;">${listing.title}</a><br/><span style="font-size:13px;color:#5C5C6E;">${listing.suburb}, ${listing.city}</span></li>`,
+      (listing) => {
+        const listingUrl = `${appBaseUrl}/listings/${listing.slug}`;
+        const safeTitle = escapeHtml(listing.title);
+        const safeLocation = escapeHtml(`${listing.suburb}, ${listing.city}`);
+        const safePriceLabel = listing.priceLabel ? escapeHtml(listing.priceLabel) : null;
+        const imageBlock = listing.imageUrl
+          ? `<img src="${escapeHtml(listing.imageUrl)}" alt="${safeTitle}" style="display:block;width:100%;max-width:520px;height:auto;border-radius:10px;border:1px solid #E8E6E0;margin-bottom:10px;"/>`
+          : "";
+
+        return `<li style="list-style:none;margin:0 0 16px;padding:0;">
+          <div style="border:1px solid #E8E6E0;border-radius:12px;padding:12px;">
+            ${imageBlock}
+            <a href="${listingUrl}" style="color:#1A1A2E;text-decoration:none;font-weight:700;font-size:16px;">${safeTitle}</a>
+            <div style="font-size:13px;color:#5C5C6E;margin-top:6px;">${safeLocation}</div>
+            ${safePriceLabel ? `<div style="font-size:13px;color:#1A1A2E;margin-top:4px;"><strong>Price:</strong> ${safePriceLabel}</div>` : ""}
+            <a href="${listingUrl}" style="display:inline-block;margin-top:10px;background:#1A1A2E;color:#FFFFFF;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;">View Property</a>
+          </div>
+        </li>`;
+      },
     )
     .join("");
 
@@ -203,9 +225,9 @@ export async function sendListingRecommendationsEmail(args: {
       title: "New Listings You Might Like",
       body: `<p>Hi ${args.name ?? "there"}, new listings were added that match your recent search preferences.</p>
        <ul>${filterChips}</ul>
-       <ul>${listingItems}</ul>`,
+       <ul style="padding:0;margin:16px 0;">${listingItems}</ul>`,
       ctaHref: `${appBaseUrl}/listings`,
-      ctaLabel: "Browse Listings",
+      ctaLabel: "View Matching Properties",
       eyebrow: "Recommendations",
     }),
   );

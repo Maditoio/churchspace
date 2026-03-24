@@ -73,6 +73,22 @@ export async function runRecommendationsCron(
         suburb: true,
         slug: true,
         propertyType: true,
+        salePrice: true,
+        rentPricePerMonth: true,
+        rentPricePerDay: true,
+        rentPricePerHour: true,
+        images: {
+          select: {
+            url: true,
+            isPrimary: true,
+            order: true,
+          },
+          orderBy: [
+            { isPrimary: "desc" },
+            { order: "asc" },
+          ],
+          take: 1,
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 8,
@@ -111,7 +127,26 @@ export async function runRecommendationsCron(
         city: preference.city,
         type: preference.propertyType,
       },
-      listings: filteredListings,
+      listings: filteredListings.map((listing) => {
+        const priceLabel = listing.salePrice
+          ? `For sale: R${listing.salePrice.toString()}`
+          : listing.rentPricePerMonth
+            ? `Per month: R${listing.rentPricePerMonth.toString()}`
+            : listing.rentPricePerDay
+              ? `Per day: R${listing.rentPricePerDay.toString()}`
+              : listing.rentPricePerHour
+                ? `Per hour: R${listing.rentPricePerHour.toString()}`
+                : null;
+
+        return {
+          title: listing.title,
+          city: listing.city,
+          suburb: listing.suburb,
+          slug: listing.slug,
+          imageUrl: listing.images[0]?.url ?? null,
+          priceLabel,
+        };
+      }),
     });
 
     emailsSent += 1;
