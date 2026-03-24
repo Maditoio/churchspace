@@ -26,13 +26,12 @@ export function ListingPaymentActions({
   async function pay() {
     setLoading(true);
     const res = await fetch(`/api/listings/${listingId}/payment`, { method: "POST" });
+    const payload = await res.json().catch(() => null);
     setLoading(false);
 
-    if (res.ok) {
-      toast.success("Payment successful. Listing is now paid for 1 year.");
-      router.refresh();
+    if (res.ok && payload?.authorizationUrl) {
+      window.location.href = payload.authorizationUrl;
     } else {
-      const payload = await res.json().catch(() => null);
       toast.error(payload?.error ?? "Could not process payment");
     }
   }

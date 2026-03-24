@@ -11,11 +11,17 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-export default async function DashboardPaymentsPage() {
+export default async function DashboardPaymentsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ payment?: string; reference?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/signin?callbackUrl=/dashboard/payments");
   }
+
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
 
   const isAdmin = session.user.role === "SUPER_ADMIN";
 
@@ -50,6 +56,18 @@ export default async function DashboardPaymentsPage() {
             : "Historical listing payments made for your listings."}
         </p>
       </div>
+
+      {resolvedSearchParams?.payment === "success" ? (
+        <div className="rounded-[var(--radius)] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+          Payment completed successfully{resolvedSearchParams.reference ? ` for reference ${resolvedSearchParams.reference}.` : "."}
+        </div>
+      ) : null}
+
+      {resolvedSearchParams?.payment === "failed" ? (
+        <div className="rounded-[var(--radius)] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+          Payment could not be verified{resolvedSearchParams.reference ? ` for reference ${resolvedSearchParams.reference}.` : "."}
+        </div>
+      ) : null}
 
       <div className="rounded-[var(--radius)] border border-[var(--border)] bg-white p-4 text-sm text-[var(--text-secondary)]">
         <p>

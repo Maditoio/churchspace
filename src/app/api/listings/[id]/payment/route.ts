@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ListingStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { LISTING_PAYMENT_AMOUNT_USD, addOneYear } from "@/lib/payments";
+import { getPaystackCallbackUrl, initializePaystackTransaction, LISTING_PAYMENT_AMOUNT_USD } from "@/lib/payments";
 
 export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -22,51 +21,29 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const now = new Date();
-  const expiresAt = addOneYear(now);
-  const reference = `SIM-${listing.id.slice(-6)}-${Date.now()}`;
+  if (!session.user.email) {
+    return NextResponse.json({ error: "A verified email is required to pay for a listing" }, { status: 400 });
+  }
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const nextStatus = listing.status === ListingStatus.INACTIVE ? ListingStatus.ACTIVE : listing.status;
-
-    const nextListing = await tx.listing.update({
-      where: { id: listing.id },
-      data: {
-        paymentStatus: "PAID",
-        paymentPaidAt: now,
-        paymentExpiresAt: expiresAt,
-        isTaken: false,
-        takenAt: null,
-        status: nextStatus,
-      },
-    });
-
-    await tx.listingPayment.create({
-      data: {
-        listingId: listing.id,
-        userId: session.user.id,
-        amount: LISTING_PAYMENT_AMOUNT_USD,
-        currency: "USD",
-        status: "PAID",
-        provider: "SIMULATED",
-        reference,
-        paidAt: now,
-        expiresAt,
-      },
-    });
-
-    return nextListing;
+  const reference = `PAYSTACK-${listing.id.slice(-6)}-${Date.now()}`;
+  const paymentSession = await initializePaystackTransaction({
+    email: session.user.email,
+    amount: LISTING_PAYMENT_AMOUNT_USD,
+    reference,
+    callbackUrl: getPaystackCallbackUrl(),
+    metadata: {
+      listingId: listing.id,
+      userId: session.user.id,
+    },
   });
 
   return NextResponse.json({
-    listing: updated,
+    authorizationUrl: paymentSession.authorization_url,
     payment: {
       amount: LISTING_PAYMENT_AMOUNT_USD,
       currency: "USD",
-      paidAt: now,
-      expiresAt,
-      reference,
-      simulated: true,
+      reference: paymentSession.reference,
+      simulated: false,
     },
   });
 }
