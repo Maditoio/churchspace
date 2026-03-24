@@ -4,7 +4,17 @@ import { prisma } from "@/lib/prisma";
 
 const MIN_RECOMMENDATION_INTERVAL_HOURS = 24;
 
-export async function runRecommendationsCron(source: "scheduled" | "manual-admin") {
+type RunRecommendationsCronOptions = {
+  ignoreInterval?: boolean;
+  includeExistingListings?: boolean;
+  debug?: boolean;
+};
+
+export async function runRecommendationsCron(
+  source: "scheduled" | "manual-admin",
+  options: RunRecommendationsCronOptions = {},
+) {
+  const { ignoreInterval = false, includeExistingListings = false, debug = false } = options;
   const now = new Date();
   const minLastSentAt = new Date(now.getTime() - MIN_RECOMMENDATION_INTERVAL_HOURS * 60 * 60 * 1000);
 
@@ -24,10 +34,12 @@ export async function runRecommendationsCron(source: "scheduled" | "manual-admin
           ],
         },
         {
-          OR: [
-            { lastRecommendationSentAt: null },
-            { lastRecommendationSentAt: { lt: minLastSentAt } },
-          ],
+          OR: ignoreInterval
+            ? undefined
+            : [
+                { lastRecommendationSentAt: null },
+                { lastRecommendationSentAt: { lt: minLastSentAt } },
+              ],
         },
       ],
     },
@@ -39,6 +51,7 @@ export async function runRecommendationsCron(source: "scheduled" | "manual-admin
   });
 
   let emailsSent = 0;
+  let matchedPreferences = 0;
 
   for (const preference of preferences) {
     const baseline = preference.lastRecommendationSentAt ?? preference.lastSearchedAt ?? new Date(0);
@@ -49,7 +62,7 @@ export async function runRecommendationsCron(source: "scheduled" | "manual-admin
         paymentStatus: "PAID",
         paymentExpiresAt: { gte: now },
         isTaken: false,
-        createdAt: { gt: baseline },
+        createdAt: includeExistingListings ? undefined : { gt: baseline },
         suburb: preference.suburb ? { contains: preference.suburb, mode: "insensitive" } : undefined,
         city: preference.city ? { contains: preference.city, mode: "insensitive" } : undefined,
         propertyType: preference.propertyType ?? undefined,
@@ -73,9 +86,28 @@ export async function runRecommendationsCron(source: "scheduled" | "manual-admin
       take: 8,
     });
 
+    if (debug) {
+      console.info("[cron/recommendations] preference evaluated", {
+        source,
+        preferenceId: preference.id,
+        userId: preference.userId,
+        userEmail: preference.user.email,
+        baseline: baseline.toISOString(),
+        includeExistingListings,
+        query: preference.query,
+        city: preference.city,
+        suburb: preference.suburb,
+        propertyType: preference.propertyType,
+        listingType: preference.listingType,
+        matchedListings: listings.length,
+      });
+    }
+
     if (listings.length === 0) {
       continue;
     }
+
+    matchedPreferences += 1;
 
     await sendListingRecommendationsEmail({
       to: preference.user.email,
@@ -103,9 +135,13 @@ export async function runRecommendationsCron(source: "scheduled" | "manual-admin
   console.info("[cron/recommendations] run finished", {
     at: new Date().toISOString(),
     source,
+    ignoreInterval,
+    includeExistingListings,
+    debug,
     processed: preferences.length,
+    matchedPreferences,
     emailsSent,
   });
 
-  return { processed: preferences.length, emailsSent };
+  return { processed: preferences.length, matchedPreferences, emailsSent };
 }

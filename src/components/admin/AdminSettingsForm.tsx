@@ -53,7 +53,7 @@ export function AdminSettingsForm({ initialSettings }: { initialSettings: Settin
 
   async function handleTriggerRecommendationsCron() {
     setRunningCron(true);
-    const res = await fetch("/api/admin/cron/recommendations/trigger", {
+    const res = await fetch("/api/admin/cron/recommendations/trigger?troubleshoot=1", {
       method: "POST",
     });
     setRunningCron(false);
