@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { upload } from "@vercel/blob/client";
+import { Camera, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -95,6 +96,7 @@ async function uploadAvatarFile(file: File, kind: "original" | "thumb") {
 export default function ProfilePage() {
   const { update } = useSession();
   const router = useRouter();
+  const [avatarInputKey, setAvatarInputKey] = useState(0);
   const [profile, setProfile] = useState<ProfileData>({
     name: "", email: "", churchName: "", denomination: "", phone: "", whatsapp: "", avatar: "", avatarThumb: "",
   });
@@ -224,6 +226,44 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleAvatarRemove() {
+    if (!profile.avatar && !profile.avatarThumb) {
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const saveRes = await fetch("/api/users/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: "", avatarThumb: "" }),
+      });
+
+      if (saveRes.status === 401) {
+        router.replace("/signin?callbackUrl=/dashboard/profile");
+        return;
+      }
+
+      if (!saveRes.ok) {
+        throw new Error("Could not remove avatar");
+      }
+
+      setProfile((prev) => ({
+        ...prev,
+        avatar: "",
+        avatarThumb: "",
+      }));
+      await update({ image: null });
+      setAvatarInputKey((prev) => prev + 1);
+      toast.success("Avatar removed");
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not remove avatar");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
   async function handleDeleteAlert(alertId: string) {
     const confirmed = window.confirm("Delete this saved listing alert? You will stop receiving matching alert emails for it.");
     if (!confirmed) {
@@ -255,23 +295,52 @@ export default function ProfilePage() {
       <h1 className="font-display text-5xl text-foreground">Profile Settings</h1>
       <div className="rounded-(--radius) border border-(--border) bg-white p-6">
         <p className="mb-4 text-sm font-medium text-foreground">Avatar Photo</p>
-        <div className="flex flex-wrap items-center gap-4">
-          {profile.avatarThumb || profile.avatar ? (
-            <Image
-              src={profile.avatarThumb || profile.avatar}
-              alt="Profile avatar"
-              width={72}
-              height={72}
-              className="rounded-full border border-(--border) object-cover"
-            />
-          ) : (
-            <div className="flex h-18 w-18 items-center justify-center rounded-full border border-(--border) bg-(--accent-light) text-xs font-semibold text-(--primary)">
-              {profile.name?.slice(0, 2).toUpperCase() || "CS"}
+        <div className="rounded-[20px] border border-(--border-subtle) bg-(--surface-raised) p-4 sm:p-5">
+          <div className="flex flex-wrap items-center gap-4">
+            {profile.avatarThumb || profile.avatar ? (
+              <Image
+                src={profile.avatarThumb || profile.avatar}
+                alt="Profile avatar"
+                width={88}
+                height={88}
+                className="h-[88px] w-[88px] rounded-full border border-(--border) object-cover shadow-(--shadow-sm)"
+              />
+            ) : (
+              <div className="flex h-[88px] w-[88px] items-center justify-center rounded-full border border-(--border) bg-(--accent-light) text-sm font-semibold text-(--primary)">
+                {profile.name?.slice(0, 2).toUpperCase() || "CS"}
+              </div>
+            )}
+
+            <div className="min-w-[220px] flex-1 space-y-2">
+              <p className="text-sm font-semibold text-foreground">{profile.name || "Your profile"}</p>
+              <p className="text-xs text-(--text-muted)">Upload a square photo for the cleanest result. Max size 8MB.</p>
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-(--border) bg-white px-4 text-sm font-medium text-(--primary) shadow-(--shadow-sm) transition-colors hover:bg-(--primary-soft)">
+                  <Camera className="h-4 w-4" />
+                  {uploadingAvatar ? "Uploading..." : profile.avatar || profile.avatarThumb ? "Change Photo" : "Upload Photo"}
+                  <input
+                    key={avatarInputKey}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={uploadingAvatar}
+                    className="hidden"
+                  />
+                </label>
+                {(profile.avatar || profile.avatarThumb) ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-10 min-w-0 rounded-full border border-(--border) px-4 text-(--text-secondary)"
+                    onClick={handleAvatarRemove}
+                    disabled={uploadingAvatar}
+                  >
+                    <Trash2 className="mr-1.5 h-4 w-4" />
+                    Remove
+                  </Button>
+                ) : null}
+              </div>
             </div>
-          )}
-          <div className="space-y-2">
-            <Input type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
-            <p className="text-xs text-(--text-muted)">Square thumbnail is generated automatically for fast loading.</p>
           </div>
         </div>
       </div>

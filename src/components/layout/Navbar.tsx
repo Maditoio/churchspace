@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Session } from "next-auth";
-import { Menu, X, LogOut, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
@@ -42,13 +42,7 @@ export function Navbar({ session }: { session: Session | null }) {
                 className="flex items-center gap-3 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(244,239,230,0.95))] px-3 py-2 text-sm text-(--text-secondary) transition-transform hover:-translate-y-0.5 hover:text-(--primary)"
               >
                 <Avatar src={session.user?.image} name={session.user?.name} size={34} />
-                <span className="min-w-0">
-                  <span className="block max-w-32 truncate font-semibold text-(--text-primary)">{session.user?.name ?? "Dashboard"}</span>
-                  <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">
-                    {isAdmin ? <ShieldCheck className="h-3.5 w-3.5" /> : <LayoutDashboard className="h-3.5 w-3.5" />}
-                    {isAdmin ? "Admin Suite" : "Member Access"}
-                  </span>
-                </span>
+                <span className="max-w-32 truncate font-semibold text-(--text-primary)">{session.user?.name ?? "Dashboard"}</span>
               </Link>
               <button
                 aria-label="Sign out"
@@ -86,13 +80,7 @@ export function Navbar({ session }: { session: Session | null }) {
                 <div className="rounded-[24px] border border-(--border) bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,239,230,0.96))] p-4 shadow-(--shadow-sm)">
                   <Link href={isAdmin ? "/admin" : "/dashboard"} onClick={() => setOpen(false)} className="flex items-center gap-3">
                     <Avatar src={session.user?.image} name={session.user?.name} size={40} />
-                    <span>
-                      <span className="block font-semibold text-(--text-primary)">{session.user?.name ?? (isAdmin ? "Admin Panel" : "Dashboard")}</span>
-                      <span className="flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">
-                        {isAdmin ? <ShieldCheck className="h-3.5 w-3.5" /> : <LayoutDashboard className="h-3.5 w-3.5" />}
-                        {isAdmin ? "Admin Suite" : "Member Access"}
-                      </span>
-                    </span>
+                    <span className="font-semibold text-(--text-primary)">{session.user?.name ?? (isAdmin ? "Admin Panel" : "Dashboard")}</span>
                   </Link>
                 </div>
                 <Link href="/dashboard/alerts" onClick={() => setOpen(false)}>Listing Alerts</Link>
