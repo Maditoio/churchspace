@@ -20,6 +20,14 @@ type ProfileData = {
   avatarThumb: string;
 };
 
+type AlertPreference = {
+  query: string | null;
+  city: string | null;
+  suburb: string | null;
+  propertyType: string | null;
+  listingType: string | null;
+};
+
 const MAX_AVATAR_BYTES = 8 * 1024 * 1024;
 const THUMB_SIZE = 160;
 
@@ -88,32 +96,61 @@ export default function ProfilePage() {
   });
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [alertsLoading, setAlertsLoading] = useState(true);
+  const [alertPreference, setAlertPreference] = useState<AlertPreference | null>(null);
+  const [deletingAlert, setDeletingAlert] = useState(false);
 
   useEffect(() => {
-    fetch("/api/users/profile")
-      .then(async (r) => {
+    Promise.all([
+      fetch("/api/users/profile").then(async (r) => {
         if (r.status === 401) {
           router.replace("/signin?callbackUrl=/dashboard/profile");
           return null;
         }
         return r.json();
-      })
-      .then((data) => {
-        if (data?.email) {
+      }),
+      fetch("/api/users/search-preferences")
+        .then(async (r) => {
+          if (r.status === 401) {
+            router.replace("/signin?callbackUrl=/dashboard/profile");
+            return null;
+          }
+          return r.json();
+        })
+        .catch(() => null),
+    ])
+      .then(([profileData, preferenceData]) => {
+        if (profileData?.email) {
           setProfile({
-            name: data.name ?? "",
-            email: data.email ?? "",
-            churchName: data.churchName ?? "",
-            denomination: data.denomination ?? "",
-            phone: data.phone ?? "",
-            whatsapp: data.whatsapp ?? "",
-            avatar: data.avatar ?? "",
-            avatarThumb: data.avatarThumb ?? "",
+            name: profileData.name ?? "",
+            email: profileData.email ?? "",
+            churchName: profileData.churchName ?? "",
+            denomination: profileData.denomination ?? "",
+            phone: profileData.phone ?? "",
+            whatsapp: profileData.whatsapp ?? "",
+            avatar: profileData.avatar ?? "",
+            avatarThumb: profileData.avatarThumb ?? "",
           });
         }
+
+        const preference = preferenceData?.preference;
+        if (preference) {
+          setAlertPreference({
+            query: preference.query ?? null,
+            city: preference.city ?? null,
+            suburb: preference.suburb ?? null,
+            propertyType: preference.propertyType ?? null,
+            listingType: preference.listingType ?? null,
+          });
+        } else {
+          setAlertPreference(null);
+        }
       })
-        .catch(() => {});
-      }, [router]);
+      .catch(() => {})
+      .finally(() => {
+        setAlertsLoading(false);
+      });
+  }, [router]);
 
   function onChange(field: keyof ProfileData) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -191,6 +228,31 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleDeleteAlert() {
+    const confirmed = window.confirm("Delete your saved listing alert? You will stop receiving alert emails until you create a new alert.");
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingAlert(true);
+    try {
+      const res = await fetch("/api/users/search-preferences", { method: "DELETE" });
+      if (res.status === 401) {
+        router.replace("/signin?callbackUrl=/dashboard/profile");
+        return;
+      }
+      if (!res.ok) {
+        throw new Error("Failed to delete alert");
+      }
+      setAlertPreference(null);
+      toast.success("Alert deleted");
+    } catch {
+      toast.error("Could not delete alert");
+    } finally {
+      setDeletingAlert(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="font-display text-5xl text-(--text-primary)">Profile Settings</h1>
@@ -227,6 +289,31 @@ export default function ProfilePage() {
           {saving ? "Saving…" : "Save Profile"}
         </Button>
       </form>
+      <div className="space-y-3 rounded-(--radius) border border-(--border) bg-white p-6">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold text-(--text-primary)">Manage Listing Alerts</h2>
+          <Button type="button" variant="secondary" onClick={() => router.push("/dashboard/alerts")}>Edit Alerts</Button>
+        </div>
+
+        {alertsLoading ? (
+          <p className="text-sm text-(--text-muted)">Loading alert settings...</p>
+        ) : alertPreference ? (
+          <div className="space-y-3">
+            <div className="grid gap-2 text-sm text-(--text-secondary) md:grid-cols-2">
+              <p><strong>Suburb:</strong> {alertPreference.suburb ?? "-"}</p>
+              <p><strong>City:</strong> {alertPreference.city ?? "-"}</p>
+              <p><strong>Property Type:</strong> {alertPreference.propertyType?.replaceAll("_", " ") ?? "-"}</p>
+              <p><strong>Listing Type:</strong> {alertPreference.listingType ?? "-"}</p>
+              <p className="md:col-span-2"><strong>Keyword:</strong> {alertPreference.query ?? "-"}</p>
+            </div>
+            <Button type="button" variant="ghost" onClick={handleDeleteAlert} disabled={deletingAlert}>
+              {deletingAlert ? "Deleting..." : "Delete Alert"}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-(--text-muted)">No active listing alert. Create one from Alerts.</p>
+        )}
+      </div>
     </div>
   );
 }
