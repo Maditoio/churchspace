@@ -43,12 +43,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const now = new Date();
+  console.info("[cron/recommendations] heartbeat", {
+    at: now.toISOString(),
+  });
+
   console.info("[cron/recommendations] run started", {
     hasXVercelCron: Boolean(request.headers.get("x-vercel-cron")),
     userAgent: request.headers.get("user-agent") ?? "",
   });
 
-  const now = new Date();
   const minLastSentAt = new Date(now.getTime() - MIN_RECOMMENDATION_INTERVAL_HOURS * 60 * 60 * 1000);
 
   const preferences = await prisma.userSearchPreference.findMany({
@@ -144,6 +148,7 @@ export async function GET(request: NextRequest) {
   }
 
   console.info("[cron/recommendations] run finished", {
+    at: new Date().toISOString(),
     processed: preferences.length,
     emailsSent,
   });
