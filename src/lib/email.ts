@@ -46,6 +46,7 @@ function standardEmailTemplate(args: {
 
 async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
   if (!resend || !process.env.RESEND_FROM_EMAIL) {
+    console.warn("[email] skipped send: RESEND_API_KEY or RESEND_FROM_EMAIL missing");
     return;
   }
   await resend.emails.send({

@@ -13,33 +13,37 @@ function getAuthorizationResult(request: NextRequest) {
 
   const bearer = request.headers.get("authorization");
   const headerSecret = request.headers.get("x-cron-secret");
-  const userAgent = request.headers.get("user-agent")?.toLowerCase() ?? "";
-  const vercelCronHeader = request.headers.get("x-vercel-cron");
 
+  // Vercel cron sends Authorization: Bearer <CRON_SECRET>.
+  // Keep x-cron-secret support for secure manual testing.
   const hasValidSecret = headerSecret === secret || bearer === `Bearer ${secret}`;
   if (!hasValidSecret) {
     return { ok: false as const, reason: "invalid-secret" };
-  }
-
-  // Accept either Vercel cron marker header or user-agent marker.
-  const isVercelCron = Boolean(vercelCronHeader) || userAgent.includes("vercel-cron");
-  if (!isVercelCron) {
-    return { ok: false as const, reason: "missing-vercel-cron-marker" };
   }
 
   return { ok: true as const };
 }
 
 export async function GET(request: NextRequest) {
+  // Log invocation before auth so scheduler hits are always visible in logs.
+  console.info("[cron/recommendations] invoked", {
+    at: new Date().toISOString(),
+    hasAuthorization: Boolean(request.headers.get("authorization")),
+    hasXCronSecret: Boolean(request.headers.get("x-cron-secret")),
+    userAgent: request.headers.get("user-agent") ?? "",
+  });
+
   const auth = getAuthorizationResult(request);
   if (!auth.ok) {
     console.warn("[cron/recommendations] unauthorized request", {
       reason: auth.reason,
       hasAuthorization: Boolean(request.headers.get("authorization")),
       hasXCronSecret: Boolean(request.headers.get("x-cron-secret")),
-      hasXVercelCron: Boolean(request.headers.get("x-vercel-cron")),
       userAgent: request.headers.get("user-agent") ?? "",
     });
+    if (auth.reason === "missing-cron-secret") {
+      return NextResponse.json({ error: "Misconfigured: CRON_SECRET missing" }, { status: 500 });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -49,7 +53,7 @@ export async function GET(request: NextRequest) {
   });
 
   console.info("[cron/recommendations] run started", {
-    hasXVercelCron: Boolean(request.headers.get("x-vercel-cron")),
+    hasAuthorization: Boolean(request.headers.get("authorization")),
     userAgent: request.headers.get("user-agent") ?? "",
   });
 
