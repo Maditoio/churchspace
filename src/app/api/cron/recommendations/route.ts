@@ -6,22 +6,13 @@ import { sendListingRecommendationsEmail } from "@/lib/email";
 const MIN_RECOMMENDATION_INTERVAL_HOURS = 24;
 
 function getAuthorizationResult(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return { ok: false as const, reason: "missing-cron-secret" };
+  const isVercelCron = request.headers.get("x-vercel-cron") === "1";
+  if (isVercelCron) {
+    return { ok: true as const };
   }
+  
 
-  const bearer = request.headers.get("authorization");
-  const headerSecret = request.headers.get("x-cron-secret");
-
-  // Vercel cron sends Authorization: Bearer <CRON_SECRET>.
-  // Keep x-cron-secret support for secure manual testing.
-  const hasValidSecret = headerSecret === secret || bearer === `Bearer ${secret}`;
-  if (!hasValidSecret) {
-    return { ok: false as const, reason: "invalid-secret" };
-  }
-
-  return { ok: true as const };
+  return { ok: false as const, reason: "missing-cron-invalid-cron-source"};
 }
 
 export async function GET(request: NextRequest) {
