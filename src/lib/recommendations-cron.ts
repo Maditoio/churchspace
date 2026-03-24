@@ -26,11 +26,9 @@ export async function runRecommendationsCron(
       AND: [
         {
           OR: [
-            { query: { not: null } },
             { suburb: { not: null } },
             { city: { not: null } },
             { propertyType: { not: null } },
-            { listingType: { not: null } },
           ],
         },
         {
@@ -55,6 +53,9 @@ export async function runRecommendationsCron(
 
   for (const preference of preferences) {
     const baseline = preference.lastRecommendationSentAt ?? preference.lastSearchedAt ?? new Date(0);
+    const preferenceSuburb = preference.suburb?.trim() ?? null;
+    const preferenceCity = preference.city?.trim() ?? null;
+    const preferencePropertyType = preference.propertyType?.toString().trim().toLowerCase() ?? null;
 
     const listings = await prisma.listing.findMany({
       where: {
@@ -63,28 +64,23 @@ export async function runRecommendationsCron(
         paymentExpiresAt: { gte: now },
         isTaken: false,
         createdAt: includeExistingListings ? undefined : { gt: baseline },
-        suburb: preference.suburb ? { contains: preference.suburb, mode: "insensitive" } : undefined,
-        city: preference.city ? { contains: preference.city, mode: "insensitive" } : undefined,
-        propertyType: preference.propertyType ?? undefined,
-        listingType: preference.listingType ? { has: preference.listingType } : undefined,
-        OR: preference.query
-          ? [
-              { title: { contains: preference.query, mode: "insensitive" } },
-              { description: { contains: preference.query, mode: "insensitive" } },
-              { suburb: { contains: preference.query, mode: "insensitive" } },
-              { city: { contains: preference.query, mode: "insensitive" } },
-            ]
-          : undefined,
+        suburb: preferenceSuburb ? { contains: preferenceSuburb, mode: "insensitive" } : undefined,
+        city: preferenceCity ? { contains: preferenceCity, mode: "insensitive" } : undefined,
       },
       select: {
         title: true,
         city: true,
         suburb: true,
         slug: true,
+        propertyType: true,
       },
       orderBy: { createdAt: "desc" },
       take: 8,
     });
+
+    const filteredListings = preferencePropertyType
+      ? listings.filter((listing) => listing.propertyType.toString().trim().toLowerCase() === preferencePropertyType)
+      : listings;
 
     if (debug) {
       console.info("[cron/recommendations] preference evaluated", {
@@ -94,16 +90,14 @@ export async function runRecommendationsCron(
         userEmail: preference.user.email,
         baseline: baseline.toISOString(),
         includeExistingListings,
-        query: preference.query,
         city: preference.city,
         suburb: preference.suburb,
         propertyType: preference.propertyType,
-        listingType: preference.listingType,
-        matchedListings: listings.length,
+        matchedListings: filteredListings.length,
       });
     }
 
-    if (listings.length === 0) {
+    if (filteredListings.length === 0) {
       continue;
     }
 
@@ -115,11 +109,9 @@ export async function runRecommendationsCron(
       filters: {
         suburb: preference.suburb,
         city: preference.city,
-        query: preference.query,
         type: preference.propertyType,
-        purpose: preference.listingType,
       },
-      listings,
+      listings: filteredListings,
     });
 
     emailsSent += 1;
