@@ -8,7 +8,7 @@ export default function SignUpPage() {
       </div>
       <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-8 md:rounded-l-none">
         <h1 className="font-display text-5xl text-[var(--text-primary)]">Create Account</h1>
-        <p className="mt-2 text-sm text-[var(--text-secondary)]">Join ChurchSpace and list your facilities with confidence.</p>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">Join ChurchSpaces and list your facilities with confidence.</p>
         <div className="mt-6"><SignUpForm /></div>
       </div>
     </div>

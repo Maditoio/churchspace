@@ -6,7 +6,7 @@ import { Providers } from "@/components/providers";
 import { auth } from "@/lib/auth";
 import "./globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspaces.co.za";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-display",
@@ -27,12 +27,12 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "ChurchSpace | Church Buildings for Rent, Sale, Conference and Youth Ministry Use",
-    template: "%s | ChurchSpace",
+    default: "ChurchSpaces | Church Buildings for Rent, Sale, Conference and Youth Ministry Use",
+    template: "%s | ChurchSpaces",
   },
   description:
-    "ChurchSpace is a church property marketplace in South Africa where ministries can rent church buildings, buy church property, book conference spaces, and find youth-friendly venues.",
-  applicationName: "ChurchSpace",
+    "ChurchSpaces is a church property marketplace in South Africa where ministries can rent church buildings, buy church property, book conference spaces, and find youth-friendly venues.",
+  applicationName: "ChurchSpaces",
   keywords: [
     "church building to rent",
     "church buildings for sale",
@@ -49,15 +49,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: siteUrl,
-    siteName: "ChurchSpace",
-    title: "ChurchSpace | Church Buildings for Rent, Sale, Conference and Youth Ministry Use",
+    siteName: "ChurchSpaces",
+    title: "ChurchSpaces | Church Buildings for Rent, Sale, Conference and Youth Ministry Use",
     description:
       "Find church buildings to rent or buy, conference spaces, halls, and youth ministry venues across South Africa.",
     locale: "en_ZA",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ChurchSpace | Church Buildings for Rent and Sale",
+    title: "ChurchSpaces | Church Buildings for Rent and Sale",
     description:
       "Search church buildings, conference rooms, halls, and youth ministry spaces across South Africa.",
   },

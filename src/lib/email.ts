@@ -5,7 +5,7 @@ const configuredBaseUrl =
   process.env.NEXT_PUBLIC_APP_URL ??
   process.env.NEXTAUTH_URL ??
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ??
-  "https://churchspace.co.za";
+  "https://churchspaces.co.za";
 const appBaseUrl = configuredBaseUrl.replace(/\/$/, "");
 
 const brandStyles = `
@@ -32,7 +32,7 @@ function standardEmailTemplate(args: {
   return `
     <div style="background:#FAFAF8;padding:32px;${brandStyles}">
       <div style="max-width:640px;margin:0 auto;background:#FFFFFF;border:1px solid #E8E6E0;border-radius:12px;padding:32px;">
-        <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#8C7A5B;">${args.eyebrow ?? "ChurchSpace Notification"}</p>
+        <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#8C7A5B;">${args.eyebrow ?? "ChurchSpaces Notification"}</p>
         <h1 style="margin:0 0 16px;font-size:28px;">Church<span style="color:#C9A96E">Space</span></h1>
         <h2 style="margin:0 0 12px;font-size:22px;color:#1A1A2E;">${args.title}</h2>
         <div style="font-size:15px;line-height:1.6;color:#5C5C6E;">${args.body}</div>
@@ -42,7 +42,7 @@ function standardEmailTemplate(args: {
             : ""
         }
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid #E8E6E0;font-size:13px;line-height:1.6;color:#7A7A8C;">
-          <p style="margin:0;">ChurchSpace helps ministries discover, list, and manage trusted church spaces across South Africa.</p>
+          <p style="margin:0;">ChurchSpaces helps ministries discover, list, and manage trusted church spaces across South Africa.</p>
         </div>
       </div>
     </div>
@@ -66,10 +66,10 @@ async function sendEmail(to: string, subject: string, html: string, replyTo?: st
 export async function sendWelcomeEmail(to: string, name?: string | null) {
   return sendEmail(
     to,
-    "Welcome to ChurchSpace",
+    "Welcome to ChurchSpaces",
     standardEmailTemplate({
-      title: "Welcome to ChurchSpace",
-      body: `<p>Hi ${name ?? "there"}, welcome to ChurchSpace. You can now list, discover, and connect with trusted church spaces across South Africa.</p>`,
+      title: "Welcome to ChurchSpaces",
+      body: `<p>Hi ${name ?? "there"}, welcome to ChurchSpaces. You can now list, discover, and connect with trusted church spaces across South Africa.</p>`,
       ctaHref: `${appBaseUrl}/dashboard`,
       ctaLabel: "Go to Dashboard",
       eyebrow: "Welcome",
@@ -82,7 +82,7 @@ export async function sendPasswordResetEmail(args: { to: string; name?: string |
 
   return sendEmail(
     args.to,
-    "Reset your ChurchSpace password",
+    "Reset your ChurchSpaces password",
     standardEmailTemplate({
       title: "Reset Your Password",
       body: `<p>Hi ${args.name ?? "there"}, we received a request to reset your password.</p><p>If this was you, click the button below. This link expires in 30 minutes.</p>`,
@@ -103,7 +103,7 @@ export async function sendListingStatusEmail(args: { to: string; status: "approv
     approved: {
       subject: "Listing Approved",
       title: "Listing Approved",
-      body: `<p>Great news. Your listing <strong>${args.title}</strong> is now live on ChurchSpace.</p>`,
+      body: `<p>Great news. Your listing <strong>${args.title}</strong> is now live on ChurchSpaces.</p>`,
     },
     rejected: {
       subject: "Listing Review Update",
@@ -220,7 +220,7 @@ export async function sendListingRecommendationsEmail(args: {
 
   return sendEmail(
     args.to,
-    "New ChurchSpace listings that match your search",
+    "New ChurchSpaces listings that match your search",
     standardEmailTemplate({
       title: "New Listings You Might Like",
       body: `<p>Hi ${args.name ?? "there"}, new listings were added that match your recent search preferences.</p>

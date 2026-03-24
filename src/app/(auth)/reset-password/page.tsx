@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
     <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-10">
       <div className="w-full rounded-(--radius) border border-(--border) bg-white p-6">
         <h1 className="font-display text-4xl text-foreground">Set New Password</h1>
-        <p className="mt-2 text-sm text-(--text-secondary)">Create a new password for your ChurchSpace account.</p>
+        <p className="mt-2 text-sm text-(--text-secondary)">Create a new password for your ChurchSpaces account.</p>
 
         {!hasResetToken ? (
           <div className="mt-6 space-y-3 text-sm text-(--text-secondary)">

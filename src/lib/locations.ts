@@ -1,4 +1,5 @@
 import { slugify } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
 
 /** All featured African countries and their major cities used for landing pages. */
 export const AFRICA_LOCATIONS: Record<string, string[]> = {
@@ -48,6 +49,38 @@ export const AFRICA_LOCATIONS: Record<string, string[]> = {
 
 /** Sorted list of featured countries (most established markets first). */
 export const FEATURED_COUNTRIES = ["South Africa", "Nigeria", "Kenya", "Ghana", "Zimbabwe", "Uganda", "Tanzania", "Ethiopia", "Zambia", "Rwanda"];
+
+export async function getFeaturedCountriesFromListings(limit = 10) {
+  const now = new Date();
+
+  const grouped = await prisma.listing.groupBy({
+    by: ["country"],
+    where: {
+      status: "ACTIVE",
+      paymentStatus: "PAID",
+      paymentExpiresAt: { gte: now },
+      isTaken: false,
+      country: { not: "" },
+    },
+    _count: { country: true },
+    orderBy: {
+      _count: {
+        country: "desc",
+      },
+    },
+    take: Math.max(limit * 2, 10),
+  });
+
+  const availableCountries = new Set(Object.keys(AFRICA_LOCATIONS));
+  const normalizedFromDb = grouped
+    .map((item) => item.country.trim())
+    .filter((country) => availableCountries.has(country));
+
+  const merged = [...normalizedFromDb, ...FEATURED_COUNTRIES];
+  const unique = Array.from(new Set(merged));
+
+  return unique.slice(0, limit);
+}
 
 /** Convert a URL slug back to a display label: "south-africa" → "South Africa". */
 export function slugToLabel(slug: string): string {

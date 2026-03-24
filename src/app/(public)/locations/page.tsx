@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AFRICA_LOCATIONS, FEATURED_COUNTRIES } from "@/lib/locations";
+import { AFRICA_LOCATIONS, getFeaturedCountriesFromListings } from "@/lib/locations";
 import { slugify } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LocationsPage() {
+export default async function LocationsPage() {
+  const featuredCountries = await getFeaturedCountriesFromListings(10);
+
   return (
     <div className="mx-auto max-w-[1280px] space-y-12 px-4 py-16 md:px-8">
       <div>
@@ -21,7 +23,7 @@ export default function LocationsPage() {
           Church Buildings Across Africa
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
-          ChurchSpace serves faith communities across the entire African continent. Browse church buildings for rent or sale, conference venues, and youth
+          ChurchSpaces serves faith communities across the entire African continent. Browse church buildings for rent or sale, conference venues, and youth
           ministry spaces by country and city. Whether your ministry is in South Africa, Nigeria, Kenya, Ghana, or beyond — find the right space here.
         </p>
       </div>
@@ -29,7 +31,7 @@ export default function LocationsPage() {
       <section>
         <h2 className="font-display text-3xl text-[var(--text-primary)]">Featured Countries</h2>
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-          {FEATURED_COUNTRIES.map((country) => (
+          {featuredCountries.map((country) => (
             <Link
               key={country}
               href={`/locations/${slugify(country)}`}
@@ -72,8 +74,8 @@ export default function LocationsPage() {
       <section className="rounded-[var(--radius)] border border-[var(--border)] bg-white p-6">
         <h2 className="font-display text-3xl text-[var(--text-primary)]">List Your Church Space Anywhere in Africa</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-          ChurchSpace welcomes listings from every country in Africa. Whether you manage a church building in Lagos, a conference centre in Nairobi, a
-          worship hall in Accra, or a youth venue in Cape Town — publishing your property on ChurchSpace connects you with thousands of
+          ChurchSpaces welcomes listings from every country in Africa. Whether you manage a church building in Lagos, a conference centre in Nairobi, a
+          worship hall in Accra, or a youth venue in Cape Town — publishing your property on ChurchSpaces connects you with thousands of
           ministries and congregations searching for space right now.
         </p>
         <Link

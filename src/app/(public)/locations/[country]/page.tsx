@@ -8,7 +8,7 @@ import { PropertyGrid } from "@/components/listings/PropertyGrid";
 import { AFRICA_LOCATIONS, allCountryParams, slugToLabel } from "@/lib/locations";
 import { slugify } from "@/lib/utils";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspaces.co.za";
 
 export async function generateStaticParams() {
   return allCountryParams();
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
   const countryLabel = slugToLabel(country);
   return {
     title: `Church Buildings to Rent and Buy in ${countryLabel}`,
-    description: `Find church buildings for rent or sale, conference spaces, church halls, and youth ministry venues in ${countryLabel}. Browse verified church property listings on ChurchSpace.`,
+    description: `Find church buildings for rent or sale, conference spaces, church halls, and youth ministry venues in ${countryLabel}. Browse verified church property listings on ChurchSpaces.`,
     keywords: [
       `church building to rent in ${countryLabel}`,
       `church buildings for sale ${countryLabel}`,
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
     ],
     alternates: { canonical: `/locations/${country}` },
     openGraph: {
-      title: `Church Buildings for Rent and Sale in ${countryLabel} | ChurchSpace`,
+      title: `Church Buildings for Rent and Sale in ${countryLabel} | ChurchSpaces`,
       description: `Browse church buildings, conference spaces, and youth ministry venues across ${countryLabel}.`,
     },
   };
@@ -96,7 +96,7 @@ export default async function CountryPage({ params }: { params: Promise<{ countr
         </h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--text-secondary)]">
           Discover church buildings to rent or buy, conference spaces, church halls, and youth ministry venues across {knownCountry}. Browse verified
-          listings from registered agents and ministry representatives on ChurchSpace.
+          listings from registered agents and ministry representatives on ChurchSpaces.
         </p>
       </div>
 
@@ -142,8 +142,8 @@ export default async function CountryPage({ params }: { params: Promise<{ countr
           Looking for a Church Space in {knownCountry}?
         </h2>
         <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-          ChurchSpace is the go-to platform for church property in {knownCountry}. Whether you need a weekly rental space for your congregation, a
-          conference hall for ministry leadership events, a youth-friendly venue for your programs, or a church building to purchase outright — ChurchSpace
+          ChurchSpaces is the go-to platform for church property in {knownCountry}. Whether you need a weekly rental space for your congregation, a
+          conference hall for ministry leadership events, a youth-friendly venue for your programs, or a church building to purchase outright — ChurchSpaces
           connects you with trusted agents and ministries across {knownCountry} and the rest of Africa.
         </p>
       </section>

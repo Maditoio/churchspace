@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { AFRICA_LOCATIONS } from "@/lib/locations";
 import { slugify } from "@/lib/utils";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspaces.co.za";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

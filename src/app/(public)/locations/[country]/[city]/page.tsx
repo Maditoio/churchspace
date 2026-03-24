@@ -8,7 +8,7 @@ import { PropertyGrid } from "@/components/listings/PropertyGrid";
 import { AFRICA_LOCATIONS, allCityParams, slugToLabel } from "@/lib/locations";
 import { slugify } from "@/lib/utils";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspaces.co.za";
 
 export async function generateStaticParams() {
   return allCityParams();
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
   const cityLabel = slugToLabel(city);
   return {
     title: `Church Buildings to Rent and Buy in ${cityLabel}, ${countryLabel}`,
-    description: `Find church buildings for rent or sale, conference spaces, and youth venues in ${cityLabel}. Browse ChurchSpace listings for church property in ${cityLabel}, ${countryLabel}.`,
+    description: `Find church buildings for rent or sale, conference spaces, and youth venues in ${cityLabel}. Browse ChurchSpaces listings for church property in ${cityLabel}, ${countryLabel}.`,
     keywords: [
       `church building to rent ${cityLabel}`,
       `church property for sale ${cityLabel}`,
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
     ],
     alternates: { canonical: `/locations/${country}/${city}` },
     openGraph: {
-      title: `Church Buildings in ${cityLabel} | ChurchSpace`,
+      title: `Church Buildings in ${cityLabel} | ChurchSpaces`,
       description: `Browse church property listings, conference rooms, and youth spaces in ${cityLabel}, ${countryLabel}.`,
       url: `${siteUrl}/locations/${country}/${city}`,
       type: "website",
@@ -121,8 +121,8 @@ export default async function CityPage({ params }: { params: Promise<{ country: 
       <section className="rounded-[var(--radius)] border border-[var(--border)] bg-white p-6">
         <h2 className="font-display text-3xl text-[var(--text-primary)]">Rent or Buy a Church Building in {cityLabel}</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
-          ChurchSpace is the go-to platform for finding church property in {cityLabel}. Whether you need a weekly rental space for your congregation, a
-          conference hall for ministry leadership events, a youth-friendly venue for church programs, or a church building to purchase — ChurchSpace connects
+          ChurchSpaces is the go-to platform for finding church property in {cityLabel}. Whether you need a weekly rental space for your congregation, a
+          conference hall for ministry leadership events, a youth-friendly venue for church programs, or a church building to purchase — ChurchSpaces connects
           you with trusted agents and ministry representatives across {knownCountry} and the rest of Africa.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">

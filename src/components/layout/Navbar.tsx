@@ -19,7 +19,7 @@ export function Navbar({ session }: { session: Session | null }) {
         <Link href="/" className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-(--primary) text-lg text-white shadow-(--shadow-sm)">✝</span>
           <span className="flex flex-col leading-none">
-            <span className="font-display text-3xl text-(--primary)">ChurchSpace</span>
+            <span className="font-display text-3xl text-(--primary)">ChurchSpaces</span>
             <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-(--accent-strong)">Property Marketplace</span>
           </span>
         </Link>

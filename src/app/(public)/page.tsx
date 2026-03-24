@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { mapListingToCard } from "@/lib/listings";
-import { FEATURED_COUNTRIES } from "@/lib/locations";
+import { getFeaturedCountriesFromListings } from "@/lib/locations";
 import { slugify } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -18,12 +18,12 @@ const CATEGORIES = [
   { label: "Full Premises", value: "FULL_PREMISES", Icon: Building2 },
 ];
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspaces.co.za";
 
 export const metadata: Metadata = {
   title: "Church Buildings to Rent or Buy in South Africa",
   description:
-    "Search church buildings to rent or buy, conference spaces, halls, and youth ministry venues on ChurchSpace. Find verified church property listings across South Africa.",
+    "Search church buildings to rent or buy, conference spaces, halls, and youth ministry venues on ChurchSpaces. Find verified church property listings across South Africa.",
   alternates: {
     canonical: "/",
   },
@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const session = await auth();
   const now = new Date();
+  const featuredCountries = await getFeaturedCountriesFromListings(10);
 
   const featured = await prisma.listing.findMany({
     where: {
@@ -53,7 +54,7 @@ export default async function HomePage() {
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "ChurchSpace",
+    name: "ChurchSpaces",
     url: siteUrl,
     potentialAction: {
       "@type": "SearchAction",
@@ -65,10 +66,10 @@ export default async function HomePage() {
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "ChurchSpace",
+    name: "ChurchSpaces",
     url: siteUrl,
     description:
-      "ChurchSpace helps churches and ministries find church buildings for rent or sale, conference venues, and youth ministry spaces.",
+      "ChurchSpaces helps churches and ministries find church buildings for rent or sale, conference venues, and youth ministry spaces.",
     areaServed: "South Africa",
   };
 
@@ -89,7 +90,7 @@ export default async function HomePage() {
               Find a space that feels ready before the first service starts.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-(--text-secondary) md:text-lg">
-              ChurchSpace helps you find a church building to rent, buy church property, compare conference space options, and secure youth-friendly ministry venues across South Africa.
+              ChurchSpaces helps you find a church building to rent, buy church property, compare conference space options, and secure youth-friendly ministry venues across South Africa.
             </p>
             <div className="mt-8 max-w-3xl"><SearchBar /></div>
             <div className="mt-8 flex flex-wrap gap-4 text-sm text-(--text-secondary)">
@@ -154,7 +155,7 @@ export default async function HomePage() {
           <Link href="/locations" className="text-sm text-(--text-secondary) hover:underline">All Countries →</Link>
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
-          {FEATURED_COUNTRIES.map((country) => (
+          {featuredCountries.map((country) => (
             <Link
               key={country}
               href={`/locations/${slugify(country)}`}
@@ -238,7 +239,7 @@ export default async function HomePage() {
             },
             {
               q: "Do you list church buildings for sale?",
-              a: "Yes. ChurchSpace includes church property sale listings, from sanctuaries and halls to full ministry premises and land.",
+              a: "Yes. ChurchSpaces includes church property sale listings, from sanctuaries and halls to full ministry premises and land.",
             },
             {
               q: "Can we search for conference and seminar venues?",

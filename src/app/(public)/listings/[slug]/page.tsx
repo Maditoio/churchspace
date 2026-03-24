@@ -6,7 +6,7 @@ import { ContactAgentCard } from "@/components/listings/ContactAgentCard";
 import { ImageGallery } from "@/components/listings/ImageGallery";
 import { prisma } from "@/lib/prisma";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspace.co.za";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspaces.co.za";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -21,10 +21,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
     include: { images: true },
   });
-  if (!listing) return { title: "Listing Not Found | ChurchSpace" };
+  if (!listing) return { title: "Listing Not Found | ChurchSpaces" };
   const description = listing.description.slice(0, 160);
   const listingUrl = `${siteUrl}/listings/${listing.slug}`;
-  const title = `${listing.title} | ChurchSpace`;
+  const title = `${listing.title} | ChurchSpaces`;
 
   return {
     title,

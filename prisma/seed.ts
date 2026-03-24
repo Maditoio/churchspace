@@ -21,7 +21,7 @@ async function main() {
   const paymentExpiry = new Date(now);
   paymentExpiry.setFullYear(paymentExpiry.getFullYear() + 1);
 
-  const adminEmail = process.env.SUPER_ADMIN_EMAIL ?? "admin@churchspace.co.za";
+  const adminEmail = process.env.SUPER_ADMIN_EMAIL ?? "admin@churchspaces.co.za";
   const adminPassword = process.env.SUPER_ADMIN_PASSWORD ?? "ChangeMe123!";
 
   const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
@@ -37,10 +37,10 @@ async function main() {
     update: { role: Role.SUPER_ADMIN, password: hashedAdminPassword },
     create: {
       email: adminEmail,
-      name: "ChurchSpace Admin",
+      name: "ChurchSpaces Admin",
       password: hashedAdminPassword,
       role: Role.SUPER_ADMIN,
-      churchName: "ChurchSpace HQ",
+      churchName: "ChurchSpaces HQ",
       isActive: true,
     },
   });

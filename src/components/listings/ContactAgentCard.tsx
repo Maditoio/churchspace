@@ -10,7 +10,7 @@ type Props = {
 
 export function ContactAgentCard({ listing, agent }: Props) {
   const whatsappMessage = encodeURIComponent(
-    `Hi ${agent.name}, I found your listing *"${listing.title}"* on ChurchSpace and I'm interested. Could you please provide more details? \n\n🏛️ Property: ${listing.title}\n📍 Location: ${listing.suburb}, ${listing.city}\n\nView listing: https://churchspace.co.za/listings/${listing.slug}`,
+    `Hi ${agent.name}, I found your listing *"${listing.title}"* on ChurchSpaces and I'm interested. Could you please provide more details? \n\n🏛️ Property: ${listing.title}\n📍 Location: ${listing.suburb}, ${listing.city}\n\nView listing: https://churchspaces.co.za/listings/${listing.slug}`,
   );
 
   const whatsappUrl = agent.whatsapp

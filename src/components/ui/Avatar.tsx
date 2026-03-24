@@ -7,7 +7,7 @@ type AvatarProps = {
 };
 
 export function Avatar({ src, name, size = 36 }: AvatarProps) {
-  const initials = (name ?? "ChurchSpace")
+  const initials = (name ?? "ChurchSpaces")
     .split(" ")
     .slice(0, 2)
     .map((v) => v[0])

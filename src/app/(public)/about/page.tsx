@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About ChurchSpace",
+  title: "About ChurchSpaces",
   description:
-    "Learn how ChurchSpace helps ministries and congregations find church buildings to rent or buy, conference spaces, and youth ministry venues across South Africa.",
+    "Learn how ChurchSpaces helps ministries and congregations find church buildings to rent or buy, conference spaces, and youth ministry venues across South Africa.",
   alternates: {
     canonical: "/about",
   },
@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-[980px] space-y-8 px-4 py-16 md:px-8">
-      <h1 className="font-display text-5xl text-[var(--text-primary)]">About ChurchSpace</h1>
+      <h1 className="font-display text-5xl text-[var(--text-primary)]">About ChurchSpaces</h1>
       <p className="text-[var(--text-secondary)]">
-        ChurchSpace is a purpose-built marketplace for church property. We help ministries and congregations find church buildings to rent,
+        ChurchSpaces is a purpose-built marketplace for church property. We help ministries and congregations find church buildings to rent,
         list church buildings for sale, and discover conference spaces and youth ministry venues that support real community impact.
       </p>
       <p className="text-[var(--text-secondary)]">

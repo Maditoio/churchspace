@@ -315,7 +315,7 @@ export function NewListingWizard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-(--accent-strong)">ChurchSpace Studio</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-(--accent-strong)">ChurchSpaces Studio</p>
           <h1 className="font-display text-5xl leading-none text-foreground md:text-6xl">Create a Listing</h1>
           <p className="mt-3 max-w-2xl text-sm text-(--text-secondary)">Present your space with better detail, stronger pricing context, and cleaner visuals before it goes to review.</p>
         </div>
