@@ -156,6 +156,13 @@ export function Navbar({ session }: { session: Session | null }) {
                 <Button variant="secondary" className="w-full">Sign In</Button>
               </Link>
             )}
+            <div className="mt-2 border-t border-(--border) pt-4 text-sm text-(--text-secondary)">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-(--accent-strong)">Legal</p>
+              <div className="flex flex-col gap-2">
+                <Link href="/privacy-policy" onClick={() => setOpen(false)} className="hover:text-(--primary)">Privacy Policy</Link>
+                <Link href="/user-policy" onClick={() => setOpen(false)} className="hover:text-(--primary)">User Policy</Link>
+              </div>
+            </div>
           </div>
         </div>
       )}

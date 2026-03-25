@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -26,6 +27,9 @@ export default function ContactPage() {
         <textarea className="min-h-36 w-full rounded-[8px] border border-[var(--border)] p-3" placeholder="How can we help?" />
         <Button variant="accent">Send Message</Button>
       </form>
+      <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-raised)] p-5 text-sm leading-7 text-[var(--text-secondary)]">
+        Before submitting personal information, you can review our <Link href="/privacy-policy" className="font-medium text-[var(--primary)] hover:underline">Privacy Policy</Link> and <Link href="/user-policy" className="font-medium text-[var(--primary)] hover:underline">User Policy</Link> for details about how ChurchSpaces handles contact requests, account information, listings, enquiries, and payments.
+      </div>
     </div>
   );
 }
