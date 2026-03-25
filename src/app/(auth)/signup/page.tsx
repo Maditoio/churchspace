@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SignUpForm } from "@/components/forms/AuthForms";
 
 export default function SignUpPage() {
@@ -10,6 +11,9 @@ export default function SignUpPage() {
         <h1 className="font-display text-5xl text-[var(--text-primary)]">Create Account</h1>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">Join ChurchSpaces and list your facilities with confidence.</p>
         <div className="mt-6"><SignUpForm /></div>
+        <div className="mt-6 border-t border-[var(--border)] pt-4 text-xs leading-6 text-[var(--text-secondary)]">
+          By creating an account, you agree to our <Link href="/privacy-policy" className="font-medium text-[var(--primary)] hover:underline">Privacy Policy</Link> and <Link href="/user-policy" className="font-medium text-[var(--primary)] hover:underline">User Policy</Link>.
+        </div>
       </div>
     </div>
   );

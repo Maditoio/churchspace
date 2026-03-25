@@ -12,6 +12,9 @@ export default function SignInPage() {
           <Link href="/forgot-password" className="text-[var(--primary)]">Forgot password?</Link>
           <Link href="/signup" className="text-[var(--primary)]">Create one</Link>
         </div>
+        <div className="mt-6 border-t border-[var(--border)] pt-4 text-xs leading-6 text-[var(--text-secondary)]">
+          By continuing, you acknowledge our <Link href="/privacy-policy" className="font-medium text-[var(--primary)] hover:underline">Privacy Policy</Link> and <Link href="/user-policy" className="font-medium text-[var(--primary)] hover:underline">User Policy</Link>.
+        </div>
       </div>
     </div>
   );

@@ -154,6 +154,9 @@ export default function SupportPage() {
             <Link href="mailto:support@churchspaces.co.za">
               <Button variant="outlineAccent">Contact Support</Button>
             </Link>
+            <div className="mt-6 rounded-[20px] bg-(--surface-raised) p-5 text-sm leading-6 text-(--text-secondary)">
+              Before contacting support, you can also review our <Link href="/privacy-policy" className="font-medium text-(--primary) hover:underline">Privacy Policy</Link> and <Link href="/user-policy" className="font-medium text-(--primary) hover:underline">User Policy</Link> for details about how ChurchSpaces handles accounts, listings, enquiries, payments, and user responsibilities.
+            </div>
           </div>
         </div>
       </section>
