@@ -85,12 +85,14 @@ export async function Footer() {
           <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
             <li><Link href="/privacy-policy">Privacy Policy</Link></li>
             <li><Link href="/user-policy">User Policy</Link></li>
+            <li><Link href="/disputes">File a Dispute</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Contact</h4>
-          <p className="text-sm text-[var(--text-secondary)]">hello@churchspaces.co.za</p>
-          <p className="text-sm text-[var(--text-secondary)]">+27 10 000 0000</p>
+          <a href="mailto:spaceschurch@gmail.com" className="block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">spaceschurch@gmail.com</a>
+          <a href="tel:+27766767752" className="mt-1 block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">+27 76 676 7752</a>
+          <Link href="/disputes" className="mt-3 block text-sm font-medium text-[var(--primary)] hover:underline">File a Dispute</Link>
         </div>
       </div>
     </footer>

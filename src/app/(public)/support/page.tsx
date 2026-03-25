@@ -1,10 +1,10 @@
-import { Mail, MessageCircle, Phone, FileText } from "lucide-react";
+import { Mail, MessageCircle, Phone, FileText, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 
 export const metadata = {
   title: "Support | ChurchSpaces",
-  description: "Get help and support from ChurchSpaces. Contact us via chat, email, or phone.",
+  description: "Get help and support from ChurchSpaces. Contact us via email or phone, or file a dispute.",
 };
 
 export default function SupportPage() {
@@ -21,19 +21,18 @@ export default function SupportPage() {
     {
       id: "email",
       title: "Email Support",
-      description: "Send us an email and we&apos;ll respond within 24 hours",
+      description: "Send us an email and we\u2019ll respond within 24 hours",
       icon: Mail,
       action: "Send Email",
-      href: "mailto:support@churchspaces.co.za",
+      href: "mailto:spaceschurch@gmail.com",
     },
     {
       id: "phone",
-      title: "Phone Support",
-      description: "Call us during business hours (Mon-Fri, 9am-5pm SAST)",
+      title: "Phone & WhatsApp",
+      description: "Call or WhatsApp us during business hours (Mon\u2013Fri, 9am\u20135pm SAST)",
       icon: Phone,
       action: "Call Now",
-      href: "tel:+27123456789",
-      comingSoon: true,
+      href: "tel:+27766767752",
     },
     {
       id: "faq",
@@ -93,11 +92,11 @@ export default function SupportPage() {
                     {channel.action}
                   </button>
                 ) : (
-                  <Link href={channel.href} className="w-full block">
+                  <a href={channel.href} className="w-full block">
                     <Button variant="primary" className="w-full">
                       {channel.action}
                     </Button>
-                  </Link>
+                  </a>
                 )}
               </div>
             );
@@ -105,8 +104,55 @@ export default function SupportPage() {
         </div>
       </section>
 
+      {/* Disputes */}
+      <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 mt-16">
+        <div className="rounded-[24px] border-2 border-[var(--accent-soft)] bg-white p-8 sm:p-10">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+              <AlertTriangle className="h-6 w-6 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-display font-bold text-(--text-primary)">File a Dispute</h2>
+              <p className="text-sm text-(--text-secondary) mt-0.5">Listing issues, payment problems, or user conduct concerns</p>
+            </div>
+          </div>
+          <p className="text-(--text-secondary) leading-7 mb-6">
+            If you have experienced a problem with a listing, a payment, or another user on the platform, you can
+            file a formal dispute and our team will investigate within 2–3 business days.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-sm">
+            <div className="rounded-[16px] border border-(--border) bg-(--surface-raised) p-4">
+              <p className="font-semibold text-(--text-primary) mb-1">Listing Disputes</p>
+              <p className="text-(--text-secondary)">Inaccurate descriptions, misleading photos, or fraudulent listings</p>
+            </div>
+            <div className="rounded-[16px] border border-(--border) bg-(--surface-raised) p-4">
+              <p className="font-semibold text-(--text-primary) mb-1">Payment Disputes</p>
+              <p className="text-(--text-secondary)">Double charges, payment failures, or fee-related billing issues</p>
+            </div>
+            <div className="rounded-[16px] border border-(--border) bg-(--surface-raised) p-4">
+              <p className="font-semibold text-(--text-primary) mb-1">User Conduct</p>
+              <p className="text-(--text-secondary)">Harassment, spam enquiries, or misuse of platform features</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/disputes">
+              <Button variant="primary">Open Dispute Form</Button>
+            </Link>
+            <a href="mailto:spaceschurch@gmail.com?subject=Dispute%20-%20ChurchSpaces">
+              <Button variant="outlineAccent">Email Us Directly</Button>
+            </a>
+            <a href="tel:+27766767752">
+              <Button variant="outlineAccent">+27 76 676 7752</Button>
+            </a>
+          </div>
+          <p className="mt-5 text-xs text-(--text-secondary)">
+            You can also review our <Link href="/user-policy" className="font-medium text-(--primary) hover:underline">User Policy</Link> for details on dispute eligibility and expected resolution timelines.
+          </p>
+        </div>
+      </section>
+
       {/* FAQ Preview */}
-      <section className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 mt-20">
+      <section className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 mt-16">
         <div className="rounded-[24px] border border-(--border) bg-white p-8 sm:p-12">
           <h2 className="text-2xl font-display font-bold text-(--text-primary) mb-6">
             Frequently Asked Questions
@@ -151,9 +197,14 @@ export default function SupportPage() {
           </div>
           <div className="mt-8 pt-8 border-t border-(--border)">
             <p className="text-(--text-secondary) mb-4">Still have questions?</p>
-            <Link href="mailto:support@churchspaces.co.za">
-              <Button variant="outlineAccent">Contact Support</Button>
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <a href="mailto:spaceschurch@gmail.com">
+                <Button variant="outlineAccent">Email Support</Button>
+              </a>
+              <a href="tel:+27766767752">
+                <Button variant="outlineAccent">+27 76 676 7752</Button>
+              </a>
+            </div>
             <div className="mt-6 rounded-[20px] bg-(--surface-raised) p-5 text-sm leading-6 text-(--text-secondary)">
               Before contacting support, you can also review our <Link href="/privacy-policy" className="font-medium text-(--primary) hover:underline">Privacy Policy</Link> and <Link href="/user-policy" className="font-medium text-(--primary) hover:underline">User Policy</Link> for details about how ChurchSpaces handles accounts, listings, enquiries, payments, and user responsibilities.
             </div>
