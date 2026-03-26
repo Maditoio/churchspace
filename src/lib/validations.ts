@@ -43,6 +43,16 @@ export const enquirySchema = z.object({
   message: z.string().min(12),
 });
 
+export const paymentDisputeCreateSchema = z.object({
+  subject: z.string().trim().min(5).max(120),
+  details: z.string().trim().min(20).max(2000),
+});
+
+export const paymentDisputeUpdateSchema = z.object({
+  status: z.enum(["OPEN", "UNDER_REVIEW", "WAITING_FOR_USER", "RESOLVED", "REJECTED"]),
+  adminNotes: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
 export const listingSchema = z.object({
   title: z.string().min(10),
   description: z.string().min(100),
@@ -79,3 +89,5 @@ export const listingSchema = z.object({
 });
 
 export type ListingInput = z.infer<typeof listingSchema>;
+export type PaymentDisputeCreateInput = z.infer<typeof paymentDisputeCreateSchema>;
+export type PaymentDisputeUpdateInput = z.infer<typeof paymentDisputeUpdateSchema>;

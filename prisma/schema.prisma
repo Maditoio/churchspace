@@ -44,6 +44,14 @@ enum ListingPaymentStatus {
   EXPIRED
 }
 
+enum PaymentDisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  WAITING_FOR_USER
+  RESOLVED
+  REJECTED
+}
+
 enum AvailabilityType {
   ALWAYS
   SCHEDULED
@@ -74,6 +82,8 @@ model User {
   sentEnquiries Enquiry[] @relation("EnquirySender")
   searchPreferences UserSearchPreference[]
   notifications Notification[]
+  paymentDisputes PaymentDispute[] @relation("PaymentDisputeReporter")
+  managedPaymentDisputes PaymentDispute[] @relation("PaymentDisputeAssignee")
 }
 
 model Account {
@@ -197,10 +207,33 @@ model ListingPayment {
   createdAt  DateTime            @default(now())
   listing    Listing             @relation(fields: [listingId], references: [id], onDelete: Cascade)
   user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  disputes   PaymentDispute[]
 
   @@index([listingId])
   @@index([userId])
   @@index([status])
+}
+
+model PaymentDispute {
+  id             String              @id @default(cuid())
+  paymentId      String
+  userId         String
+  assigneeId     String?
+  subject        String
+  details        String
+  status         PaymentDisputeStatus @default(OPEN)
+  adminNotes     String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+  payment        ListingPayment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  user           User                @relation("PaymentDisputeReporter", fields: [userId], references: [id], onDelete: Cascade)
+  assignee       User?               @relation("PaymentDisputeAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([paymentId, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 model ListingImage {

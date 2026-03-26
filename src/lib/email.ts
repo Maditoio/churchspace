@@ -239,3 +239,73 @@ export async function sendListingRecommendationsEmail(args: {
     }),
   );
 }
+
+export async function sendPaymentDisputeFiledEmail(args: {
+  to: string;
+  name?: string | null;
+  paymentReference: string;
+  listingTitle: string;
+  subject: string;
+}) {
+  return sendEmail(
+    args.to,
+    `Dispute Logged for Payment ${args.paymentReference}`,
+    standardEmailTemplate({
+      title: "Payment Dispute Logged",
+      body: `<p>Hi ${args.name ?? "there"}, your dispute for payment <strong>${escapeHtml(args.paymentReference)}</strong> has been logged successfully.</p><p><strong>Listing:</strong> ${escapeHtml(args.listingTitle)}</p><p><strong>Subject:</strong> ${escapeHtml(args.subject)}</p><p>Our team has been notified and will review the dispute from your dashboard.</p>`,
+      ctaHref: `${appBaseUrl}/dashboard/disputes`,
+      ctaLabel: "View Disputes",
+      eyebrow: "Payments",
+    }),
+  );
+}
+
+export async function sendPaymentDisputeAdminEmail(args: {
+  to: string;
+  reporterName?: string | null;
+  reporterEmail: string;
+  paymentReference: string;
+  listingTitle: string;
+  subject: string;
+}) {
+  return sendEmail(
+    args.to,
+    `New Payment Dispute: ${args.paymentReference}`,
+    standardEmailTemplate({
+      title: "New Payment Dispute",
+      body: `<p>A new payment dispute has been filed in ChurchSpaces.</p><p><strong>Reporter:</strong> ${escapeHtml(args.reporterName ?? "Unknown")}</p><p><strong>Email:</strong> ${escapeHtml(args.reporterEmail)}</p><p><strong>Payment Reference:</strong> ${escapeHtml(args.paymentReference)}</p><p><strong>Listing:</strong> ${escapeHtml(args.listingTitle)}</p><p><strong>Subject:</strong> ${escapeHtml(args.subject)}</p>`,
+      ctaHref: `${appBaseUrl}/admin/disputes`,
+      ctaLabel: "Open Admin Disputes",
+      eyebrow: "Admin Alert",
+    }),
+  );
+}
+
+export async function sendPaymentDisputeStatusEmail(args: {
+  to: string;
+  name?: string | null;
+  paymentReference: string;
+  status: "OPEN" | "UNDER_REVIEW" | "WAITING_FOR_USER" | "RESOLVED" | "REJECTED";
+  subject: string;
+  adminNotes?: string | null;
+}) {
+  const statusLabels = {
+    OPEN: "Open",
+    UNDER_REVIEW: "Under Review",
+    WAITING_FOR_USER: "Waiting For You",
+    RESOLVED: "Resolved",
+    REJECTED: "Rejected",
+  } as const;
+
+  return sendEmail(
+    args.to,
+    `Dispute Update: ${args.paymentReference}`,
+    standardEmailTemplate({
+      title: `Dispute ${statusLabels[args.status]}`,
+      body: `<p>Hi ${args.name ?? "there"}, your payment dispute for <strong>${escapeHtml(args.paymentReference)}</strong> is now <strong>${statusLabels[args.status]}</strong>.</p><p><strong>Subject:</strong> ${escapeHtml(args.subject)}</p>${args.adminNotes ? `<p><strong>Admin note:</strong> ${escapeHtml(args.adminNotes)}</p>` : ""}`,
+      ctaHref: `${appBaseUrl}/dashboard/disputes`,
+      ctaLabel: "Review Dispute",
+      eyebrow: "Payments",
+    }),
+  );
+}

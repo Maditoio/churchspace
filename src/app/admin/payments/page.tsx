@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { PaginationControls } from "@/components/ui/PaginationControls";
+import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 import { getPaginationMeta, parsePageParam } from "@/lib/pagination";
+import { activePaymentDisputeStatuses } from "@/lib/payment-disputes";
+import { PaymentDisputeStatusBadge } from "@/components/payments/PaymentDisputeStatusBadge";
 import { formatPaymentCurrency, LISTING_PAYMENT_CURRENCY } from "@/lib/payments";
 
 const PAGE_SIZE = 12;
@@ -16,11 +20,16 @@ export default async function AdminPaymentsPage({
   const totalPayments = await prisma.listingPayment.count();
   const pagination = getPaginationMeta(totalPayments, parsePageParam(resolvedSearchParams?.page), PAGE_SIZE);
 
-  const [payments, aggregateAll, aggregateMonth, payerGroups] = await Promise.all([
+  const [payments, aggregateAll, aggregateMonth, payerGroups, activeDisputes] = await Promise.all([
     prisma.listingPayment.findMany({
       include: {
         listing: { select: { id: true, title: true, slug: true } },
         user: { select: { name: true, email: true, churchName: true } },
+        disputes: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { status: true },
+        },
       },
       orderBy: { paidAt: "desc" },
       skip: pagination.skip,
@@ -36,6 +45,7 @@ export default async function AdminPaymentsPage({
       _count: { _all: true },
     }),
     prisma.listingPayment.groupBy({ by: ["userId"] }),
+    prisma.paymentDispute.count({ where: { status: { in: activePaymentDisputeStatuses } } }),
   ]);
 
   const totalRevenue = Number(aggregateAll._sum.amount ?? 0);
@@ -51,11 +61,16 @@ export default async function AdminPaymentsPage({
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="flex flex-wrap gap-3">
+        <Link href="/admin/disputes"><Button variant="secondary">Manage Disputes</Button></Link>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-5">
         <StatsCard label="Total Revenue" value={formatPaymentCurrency(totalRevenue, LISTING_PAYMENT_CURRENCY)} />
         <StatsCard label="Revenue This Month" value={formatPaymentCurrency(monthRevenue, LISTING_PAYMENT_CURRENCY)} />
         <StatsCard label="Total Payments" value={aggregateAll._count._all} />
         <StatsCard label="Unique Payers" value={uniquePayers} />
+        <StatsCard label="Active Disputes" value={activeDisputes} />
       </div>
 
       <section className="overflow-x-auto rounded-(--radius) border border-(--border) bg-white">
@@ -67,6 +82,7 @@ export default async function AdminPaymentsPage({
               <th className="px-4 py-3">Listing</th>
               <th className="px-4 py-3">Amount</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Dispute</th>
               <th className="px-4 py-3">Reference</th>
             </tr>
           </thead>
@@ -91,12 +107,15 @@ export default async function AdminPaymentsPage({
                   {formatPaymentCurrency(Number(payment.amount), payment.currency)}
                 </td>
                 <td className="px-4 py-3 text-(--text-secondary)">{payment.status}</td>
+                <td className="px-4 py-3">
+                  {payment.disputes[0] ? <PaymentDisputeStatusBadge status={payment.disputes[0].status} /> : <span className="text-xs text-(--text-secondary)">None</span>}
+                </td>
                 <td className="px-4 py-3 text-xs text-(--text-secondary)">{payment.reference}</td>
               </tr>
             ))}
             {payments.length === 0 ? (
               <tr>
-                <td className="px-4 py-8 text-center text-(--text-secondary)" colSpan={6}>
+                <td className="px-4 py-8 text-center text-(--text-secondary)" colSpan={7}>
                   No listing payments captured yet.
                 </td>
               </tr>
