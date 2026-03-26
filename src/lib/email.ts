@@ -7,6 +7,10 @@ const configuredBaseUrl =
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ??
   "https://churchspaces.co.za";
 const appBaseUrl = configuredBaseUrl.replace(/\/$/, "");
+const supportEmail = "hello@churchspaces.church";
+const supportPhone = "+27 76 676 7752";
+const supportOfficeLabel = "Johannesburg, Craddock Square Rosebank";
+const supportOfficeAddress = "169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196";
 
 const brandStyles = `
   font-family: 'DM Sans', Arial, sans-serif;
@@ -33,7 +37,7 @@ function standardEmailTemplate(args: {
     <div style="background:#FAFAF8;padding:32px;${brandStyles}">
       <div style="max-width:640px;margin:0 auto;background:#FFFFFF;border:1px solid #E8E6E0;border-radius:12px;padding:32px;">
         <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#8C7A5B;">${args.eyebrow ?? "ChurchSpaces Notification"}</p>
-        <h1 style="margin:0 0 16px;font-size:28px;">Church<span style="color:#C9A96E">Space</span></h1>
+        <h1 style="margin:0 0 16px;font-size:28px;">Church<span style="color:#C9A96E">Spaces</span></h1>
         <h2 style="margin:0 0 12px;font-size:22px;color:#1A1A2E;">${args.title}</h2>
         <div style="font-size:15px;line-height:1.6;color:#5C5C6E;">${args.body}</div>
         ${
@@ -43,6 +47,9 @@ function standardEmailTemplate(args: {
         }
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid #E8E6E0;font-size:13px;line-height:1.6;color:#7A7A8C;">
           <p style="margin:0;">ChurchSpaces helps ministries discover, list, and manage trusted church spaces across South Africa.</p>
+          <p style="margin:10px 0 0;"><strong>Support email:</strong> <a href="mailto:${supportEmail}" style="color:#1A1A2E;">${supportEmail}</a></p>
+          <p style="margin:6px 0 0;"><strong>Phone:</strong> <a href="tel:+27766767752" style="color:#1A1A2E;">${supportPhone}</a></p>
+          <p style="margin:6px 0 0;"><strong>Office:</strong> ${supportOfficeLabel}<br />${supportOfficeAddress}</p>
         </div>
       </div>
     </div>

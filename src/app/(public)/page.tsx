@@ -71,6 +71,23 @@ export default async function HomePage() {
     description:
       "ChurchSpaces helps churches and ministries find church buildings for rent or sale, conference venues, and youth ministry spaces.",
     areaServed: "South Africa",
+    email: "hello@churchspaces.church",
+    telephone: "+27 76 676 7752",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "169 Oxford Road, Rosebank, Craddock Square",
+      addressLocality: "Johannesburg",
+      postalCode: "2196",
+      addressCountry: "ZA",
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "hello@churchspaces.church",
+      telephone: "+27 76 676 7752",
+      areaServed: "ZA",
+      availableLanguage: ["en"],
+    },
   };
 
   return (

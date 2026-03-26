@@ -14,6 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/locations`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${siteUrl}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${siteUrl}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${siteUrl}/support`, lastModified: now, changeFrequency: "monthly", priority: 0.65 },
+    { url: `${siteUrl}/disputes`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${siteUrl}/privacy-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.35 },
+    { url: `${siteUrl}/user-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.35 },
   ];
 
   const countryPages: MetadataRoute.Sitemap = Object.keys(AFRICA_LOCATIONS).map((country) => ({
