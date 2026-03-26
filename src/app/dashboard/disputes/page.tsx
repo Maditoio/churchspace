@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { Button } from "@/components/ui/Button";
+import { PaymentDisputeButton } from "@/components/payments/PaymentDisputeButton";
 import { PaymentDisputeStatusBadge } from "@/components/payments/PaymentDisputeStatusBadge";
 import { auth } from "@/lib/auth";
 import { getPaginationMeta, parsePageParam } from "@/lib/pagination";
@@ -40,6 +41,20 @@ export default async function DashboardDisputesPage({
     take: PAGE_SIZE,
   });
 
+  const recentPayments = await prisma.listingPayment.findMany({
+    where,
+    include: {
+      listing: { select: { title: true, slug: true } },
+      disputes: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { status: true },
+      },
+    },
+    orderBy: { paidAt: "desc" },
+    take: 6,
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -51,6 +66,38 @@ export default async function DashboardDisputesPage({
         </div>
         <Link href="/dashboard/payments"><Button variant="secondary">Back to Payments</Button></Link>
       </div>
+
+      <section className="rounded-(--radius) border border-(--border) bg-white p-5 shadow-(--shadow-sm)">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Start a New Dispute</h2>
+            <p className="mt-1 text-sm text-(--text-secondary)">
+              Choose a payment and submit a dispute directly from this page.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {recentPayments.length ? (
+            recentPayments.map((payment) => (
+              <div key={payment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border-subtle) bg-(--surface-raised) px-4 py-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{payment.listing.title}</p>
+                  <p className="text-xs text-(--text-secondary)">{payment.reference}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {payment.disputes[0] ? <PaymentDisputeStatusBadge status={payment.disputes[0].status as PaymentDisputeStatusValue} /> : null}
+                  <PaymentDisputeButton paymentId={payment.id} latestDisputeStatus={payment.disputes[0]?.status} />
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="rounded-xl border border-(--border-subtle) bg-(--surface-raised) px-4 py-3 text-sm text-(--text-secondary)">
+              You do not have any payment transactions yet.
+            </p>
+          )}
+        </div>
+      </section>
 
       <div className="space-y-4">
         {disputes.length ? (
