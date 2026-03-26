@@ -92,10 +92,6 @@ export async function Footer() {
           <h4 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Contact</h4>
           <a href="mailto:hello@churchspaces.church" className="block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">hello@churchspaces.church</a>
           <a href="tel:+27766767752" className="mt-1 block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">+27 76 676 7752</a>
-          <div className="mt-3 rounded-[14px] bg-[var(--surface-raised)] px-3 py-2.5 text-sm leading-6 text-[var(--text-secondary)]">
-            <p className="font-medium text-[var(--text-primary)]">Johannesburg, Craddock Square Rosebank</p>
-            <p>169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196</p>
-          </div>
           <Link href="/disputes" className="mt-3 block text-sm font-medium text-[var(--primary)] hover:underline">File a Dispute</Link>
         </div>
       </div>

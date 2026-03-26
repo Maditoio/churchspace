@@ -23,7 +23,7 @@ export default function ContactPage() {
       <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-white p-6 text-sm leading-7 text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
         <p><strong className="text-[var(--text-primary)]">Email:</strong> <a href="mailto:hello@churchspaces.church" className="text-[var(--primary)] hover:underline">hello@churchspaces.church</a></p>
         <p><strong className="text-[var(--text-primary)]">Phone:</strong> <a href="tel:+27766767752" className="text-[var(--primary)] hover:underline">+27 76 676 7752</a></p>
-        <p><strong className="text-[var(--text-primary)]">Office:</strong> Johannesburg, Craddock Square Rosebank</p>
+        <p><strong className="text-[var(--text-primary)]">Head Office:</strong> Johannesburg, Craddock Square Rosebank</p>
         <p>169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196</p>
       </div>
       <form className="mt-8 space-y-4 rounded-[var(--radius)] border border-[var(--border)] bg-white p-6">
