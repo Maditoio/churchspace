@@ -74,7 +74,12 @@ export default async function DashboardPaymentsPage({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Link href={isAdmin ? "/admin/disputes" : "/dashboard/disputes"}><Button variant="secondary">{isAdmin ? "Manage Disputes" : "View My Disputes"}</Button></Link>
+        <Link href={isAdmin ? "/admin/disputes" : "/dashboard/disputes"}>
+          <Button variant="secondary">{isAdmin ? "Manage Disputes" : "Start a New Dispute"}</Button>
+        </Link>
+        {!isAdmin ? (
+          <Link href="/dashboard/disputes"><Button variant="ghost">View My Disputes</Button></Link>
+        ) : null}
       </div>
 
       {resolvedSearchParams?.payment === "success" ? (
