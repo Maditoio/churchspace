@@ -8,6 +8,41 @@ import { prisma } from "@/lib/prisma";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://churchspaces.co.za";
 
+function getYouTubeEmbedUrl(url: string | null | undefined) {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+
+    if (host.includes("youtu.be")) {
+      const id = parsed.pathname.split("/").filter(Boolean)[0];
+      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+    }
+
+    if (host.includes("youtube.com") || host.includes("youtube-nocookie.com")) {
+      if (parsed.pathname.startsWith("/watch")) {
+        const id = parsed.searchParams.get("v");
+        return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+      }
+
+      if (parsed.pathname.startsWith("/embed/")) {
+        const id = parsed.pathname.split("/embed/")[1]?.split("/")[0];
+        return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+      }
+
+      if (parsed.pathname.startsWith("/shorts/")) {
+        const id = parsed.pathname.split("/shorts/")[1]?.split("/")[0];
+        return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const now = new Date();
@@ -70,6 +105,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const schedule = Array.isArray(listing.sharingSchedule)
     ? (listing.sharingSchedule as { day: string; startTime: string; endTime: string; isAvailable: boolean }[])
     : [];
+  const videoEmbedUrl = getYouTubeEmbedUrl(listing.videoUrl);
 
   return (
     <div className="mx-auto grid max-w-[1280px] gap-8 px-4 py-12 md:grid-cols-[2fr_1fr] md:px-8">
@@ -96,6 +132,21 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Availability</h2>
           <AvailabilityGrid slots={schedule} />
         </section>
+        {videoEmbedUrl && (
+          <section>
+            <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Property Video</h2>
+            <div className="relative overflow-hidden rounded-[var(--radius)] border border-[var(--border)]" style={{ paddingTop: "56.25%" }}>
+              <iframe
+                title="Property Video"
+                className="absolute inset-0 h-full w-full"
+                src={videoEmbedUrl}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </section>
+        )}
         <section>
           <h2 className="mb-3 font-display text-3xl text-[var(--text-primary)]">Map</h2>
           <iframe

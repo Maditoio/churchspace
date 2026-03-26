@@ -43,11 +43,12 @@ export async function POST(request: NextRequest) {
   const slugBase = slugify(parsed.data.title);
   const slug = `${slugBase}-${Date.now().toString().slice(-6)}`;
 
-  const { images, ...listingData } = parsed.data;
+  const { images, videoUrl, ...listingData } = parsed.data;
 
   const created = await prisma.listing.create({
     data: {
       ...listingData,
+      videoUrl: videoUrl?.trim() ? videoUrl.trim() : null,
       slug,
       status: ListingStatus.PENDING_REVIEW,
       availableFrom: listingData.availableFrom ? new Date(listingData.availableFrom) : undefined,

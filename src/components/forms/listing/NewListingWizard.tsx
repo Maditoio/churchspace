@@ -215,6 +215,7 @@ export function NewListingWizard() {
     const payload = {
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? ""),
+      videoUrl: String(formData.get("videoUrl") ?? "").trim() || undefined,
       propertyType: String(formData.get("propertyType") ?? "OTHER"),
       listingType,
       address: String(formData.get("address") ?? ""),
@@ -300,7 +301,7 @@ export function NewListingWizard() {
         return;
       }
 
-      const { listing } = await response.json();
+      await response.json();
 
 
       toast.success("Listing submitted for review.");

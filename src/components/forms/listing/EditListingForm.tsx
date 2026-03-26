@@ -10,6 +10,7 @@ type Listing = {
   id: string;
   title: string;
   description: string;
+  videoUrl: string | null;
   address: string;
   suburb: string;
   city: string;
@@ -36,6 +37,7 @@ export function EditListingForm({ listing }: { listing: Listing }) {
     const payload = {
       title: form.get("title"),
       description: form.get("description"),
+      videoUrl: String(form.get("videoUrl") ?? "").trim() || undefined,
       address: form.get("address"),
       suburb: form.get("suburb"),
       city: form.get("city"),
@@ -77,6 +79,10 @@ export function EditListingForm({ listing }: { listing: Listing }) {
         <div className="md:col-span-2">
           <label className="mb-1 block text-sm font-medium text-[var(--text-primary)]">Description</label>
           <textarea name="description" defaultValue={listing.description} className="min-h-40 w-full rounded-[8px] border border-[var(--border)] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" />
+        </div>
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-[var(--text-primary)]">YouTube Video URL</label>
+          <Input name="videoUrl" type="url" defaultValue={listing.videoUrl ?? ""} placeholder="https://www.youtube.com/watch?v=..." />
         </div>
         <div className="md:col-span-2">
           <label className="mb-1 block text-sm font-medium text-[var(--text-primary)]">Address</label>

@@ -26,12 +26,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const parsed = listingSchema.partial().safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { images: _images, ...data } = parsed.data;
+  const { images, videoUrl, ...data } = parsed.data;
+  void images;
 
   const listing = await prisma.listing.update({
     where: { id },
     data: {
       ...data,
+      ...(videoUrl !== undefined && {
+        videoUrl: videoUrl?.trim() ? videoUrl.trim() : null,
+      }),
       ...(data.availableFrom !== undefined && {
         availableFrom: data.availableFrom ? new Date(data.availableFrom) : null,
       }),

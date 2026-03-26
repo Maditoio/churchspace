@@ -115,6 +115,7 @@ model Listing {
   title             String
   slug              String           @unique
   description       String
+  videoUrl          String?
   propertyType      PropertyType
   listingType       ListingType[]
   status            ListingStatus    @default(DRAFT)

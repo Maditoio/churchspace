@@ -46,6 +46,7 @@ export const enquirySchema = z.object({
 export const listingSchema = z.object({
   title: z.string().min(10),
   description: z.string().min(100),
+  videoUrl: z.string().trim().url().optional().or(z.literal("")),
   propertyType: z.nativeEnum(PropertyType),
   listingType: z.array(z.nativeEnum(ListingType)).min(1),
   address: z.string().min(5),
