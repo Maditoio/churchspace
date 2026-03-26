@@ -14,7 +14,7 @@ import { Step5Pricing } from "@/components/forms/listing/Step5Pricing";
 import { Step6Photos, type ImageFileWithOrder } from "@/components/forms/listing/Step6Photos";
 import { Step7Review } from "@/components/forms/listing/Step7Review";
 
-const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos, Step7Review];
+const steps = [Step1BasicInfo, Step2Location, Step3Details, Step4Equipment, Step5Pricing, Step6Photos];
 const UPLOAD_TIMEOUT_MS = 120_000;
 
 type ApiErrorShape = {
@@ -358,17 +358,21 @@ export function NewListingWizard() {
                     }}
                     onImageOrderChanged={handleImageOrderChanged}
                   />
-                ) : currentStep === 7 ? (
-                  <Step7Review
-                    confirmAccuracy={confirmAccuracy}
-                    onConfirmAccuracyChange={setConfirmAccuracy}
-                  />
                 ) : (
                   <StepComponent />
                 )}
               </div>
             );
           })}
+          <div
+            className={step === 7 ? "block" : "hidden"}
+            aria-hidden={step === 7 ? undefined : true}
+          >
+            <Step7Review
+              confirmAccuracy={confirmAccuracy}
+              onConfirmAccuracyChange={setConfirmAccuracy}
+            />
+          </div>
         </div>
         {uploadProgress.total > 0 && step !== 6 && (
           <div className="mt-6 rounded-(--radius) border border-(--border) bg-(--surface-raised) px-4 py-3">
