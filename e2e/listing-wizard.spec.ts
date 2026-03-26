@@ -32,7 +32,7 @@ test("listing wizard keeps values on back and can submit", async ({ page, reques
 
   const listingTitle = `E2E Listing ${timestamp}`;
   const description =
-    "This is an automated end to end listing description used to verify step persistence and final submission behavior for ChurchSpace.";
+    "This is an automated end to end listing description used to verify step persistence and final submission behavior for ChurchSpaces.";
 
   await page.getByPlaceholder("Listing title").fill(listingTitle);
   await page.getByRole("checkbox", { name: "RENT" }).check();

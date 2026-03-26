@@ -35,8 +35,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 But in **Vercel production**, these need to be:
 ```
-NEXTAUTH_URL=https://churchspace.vercel.app (or your actual domain)
-NEXT_PUBLIC_APP_URL=https://churchspace.vercel.app
+NEXTAUTH_URL=https://churchspaces.vercel.app (or your actual domain)
+NEXT_PUBLIC_APP_URL=https://churchspaces.vercel.app
 ```
 
 ---
@@ -67,7 +67,7 @@ This will help you verify environment variables at runtime.
 | Variable | Type | Value |
 |----------|------|-------|
 | `BLOB_READ_WRITE_TOKEN` | Encrypted | `vercel_blob_rw_...` (from Step 1) |
-| `NEXTAUTH_URL` | Plain | `https://churchspace.vercel.app` (or your domain) |
+| `NEXTAUTH_URL` | Plain | `https://churchspaces.vercel.app` (or your domain) |
 | `NEXTAUTH_SECRET` | Encrypted | (Should already exist) |
 | `DATABASE_URL` | Encrypted | (Should already exist - Neon connection) |
 
@@ -85,7 +85,7 @@ Or manually trigger a redeploy in Vercel dashboard →  **Deployments** → **Re
 
 After redeploy, visit:
 ```
-https://churchspace.vercel.app/api/diagnostic
+https://churchspaces.vercel.app/api/diagnostic
 ```
 
 You should see:
@@ -96,7 +96,7 @@ You should see:
     "blobTokenExists": true,
     "blobTokenLength": 52,
     "nextAuthUrlExists": true,
-    "nextAuthUrl": "https://churchspace.vercel.app"
+    "nextAuthUrl": "https://churchspaces.vercel.app"
   },
   "auth": {
     "userId": "user-id-here"
@@ -108,7 +108,7 @@ If `blobTokenExists` is `false`, the token isn't set.
 
 ### Step 5: Test Image Upload
 
-1. Go to https://churchspace.vercel.app/dashboard/listings/new
+1. Go to https://churchspaces.vercel.app/dashboard/listings/new
 2. Fill out listing info
 3. On Step 6 (Photos), select some files
 4. Click Submit

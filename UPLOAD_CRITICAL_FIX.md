@@ -68,8 +68,8 @@ Your environment variables should now include:
 | `BLOB_READ_WRITE_TOKEN` | ✨ Encrypted | **ADD THIS** |
 | `NEXTAUTH_SECRET` | ✨ Encrypted | ✓ Should exist |
 | `DATABASE_URL` | ✨ Encrypted | ✓ Should exist (Neon) |
-| `NEXTAUTH_URL` | Plain Text | Check → should be `https://churchspace.vercel.app` |
-| `NEXT_PUBLIC_APP_URL` | Plain Text | Check → should be `https://churchspace.vercel.app` |
+| `NEXTAUTH_URL` | Plain Text | Check → should be `https://churchspaces.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | Plain Text | Check → should be `https://churchspaces.vercel.app` |
 | `RESEND_API_KEY` | ✨ Encrypted | Check → for email |
 
 **Note**: If `NEXTAUTH_URL` in Vercel still says `http://localhost:3000`, update it to your production URL.
@@ -104,7 +104,7 @@ This triggers Vercel to redeploy automatically.
 After redeploy completes, visit this diagnostic endpoint:
 
 ```
-https://churchspace.vercel.app/api/diagnostic
+https://churchspaces.vercel.app/api/diagnostic
 ```
 
 You should see (assuming you're logged in):
@@ -116,7 +116,7 @@ You should see (assuming you're logged in):
     "blobTokenExists": true,
     "blobTokenLength": 52,
     "nextAuthUrlExists": true,
-    "nextAuthUrl": "https://churchspace.vercel.app"
+    "nextAuthUrl": "https://churchspaces.vercel.app"
   },
   "auth": {
     "userId": "your-user-id-here"
@@ -130,7 +130,7 @@ You should see (assuming you're logged in):
 
 ### Step 2: Test Image Upload
 
-1. **Go to** https://churchspace.vercel.app/dashboard/listings/new
+1. **Go to** https://churchspaces.vercel.app/dashboard/listings/new
 2. **Fill out** listing details (need title ≥10 chars, description ≥100 chars)
 3. Click **Next Step** until you reach **Step 6 (Photos)**
 4. **Click** "Choose Photos"

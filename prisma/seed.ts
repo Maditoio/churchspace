@@ -124,8 +124,8 @@ async function main() {
         agentId: agent.id,
         images: {
           create: [
-            { url: `https://picsum.photos/seed/churchspace-${i + 1}/1200/800`, alt: item.title, isPrimary: true, order: 0 },
-            { url: `https://picsum.photos/seed/churchspace-${i + 10}/1200/800`, alt: `${item.title} photo`, isPrimary: false, order: 1 },
+            { url: `https://picsum.photos/seed/churchspaces-${i + 1}/1200/800`, alt: item.title, isPrimary: true, order: 0 },
+            { url: `https://picsum.photos/seed/churchspaces-${i + 10}/1200/800`, alt: `${item.title} photo`, isPrimary: false, order: 1 },
           ],
         },
       },
