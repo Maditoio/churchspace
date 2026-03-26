@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, GripVertical, Star } from "lucide-react";
+import { X, GripVertical, Star, Info } from "lucide-react";
 import { toast } from "sonner";
 
 const MAX_FILES = 20;
@@ -41,6 +41,7 @@ export function Step6Photos({
   const pickerInputRef = useRef<HTMLInputElement>(null);
   const formInputRef = useRef<HTMLInputElement>(null);
   const [draggedOver, setDraggedOver] = useState<number | null>(null);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
 
   const previews = useMemo(
     () =>
@@ -171,35 +172,65 @@ export function Step6Photos({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--accent-strong)">Step 6 • Media Upload</p>
-          <p className="mt-1 text-sm font-medium text-foreground">Add clear photos of your space before sending your listing for review.</p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="rounded-full border border-(--border) bg-white px-3 py-1 text-xs font-semibold text-(--text-secondary)">
           {files.length} / {MAX_FILES} Selected
         </div>
+        <button
+          type="button"
+          onClick={() => setShowInfoDialog(true)}
+          className="p-1.5 text-(--text-secondary) hover:text-(--accent) transition-colors"
+          title="View photo upload information"
+          aria-label="View photo upload information"
+        >
+          <Info className="h-5 w-5" />
+        </button>
       </div>
 
-      <div className="rounded-(--radius) border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        Photos cannot be changed after you submit for review. Please confirm your photo order and cover image before continuing.
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">Capacity</p>
-          <p className="mt-1 text-lg font-semibold text-(--primary)">{MAX_FILES} photos max</p>
+      {/* Info Dialog */}
+      {showInfoDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-(--radius) bg-white p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Photo Upload Requirements</h3>
+              <button
+                type="button"
+                onClick={() => setShowInfoDialog(false)}
+                className="p-1 text-(--text-secondary) hover:text-(--text-primary)"
+                aria-label="Close dialog"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-3 text-sm text-foreground">
+              <div>
+                <p className="font-medium text-(--text-primary)">Maximum Photos</p>
+                <p className="text-(--text-secondary)">{MAX_FILES} photos total</p>
+              </div>
+              <div>
+                <p className="font-medium text-(--text-primary)">File Size</p>
+                <p className="text-(--text-secondary)">8MB maximum per photo</p>
+              </div>
+              <div>
+                <p className="font-medium text-(--text-primary)">Accepted Formats</p>
+                <p className="text-(--text-secondary)">PNG, JPG, WEBP</p>
+              </div>
+              <div>
+                <p className="font-medium text-(--text-primary)">Important</p>
+                <p className="text-(--text-secondary)">Photos cannot be changed after submitting for review. Please confirm your order and cover image before continuing.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowInfoDialog(false)}
+              className="mt-4 w-full rounded-(--radius) bg-(--primary) px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Got it
+            </button>
+          </div>
         </div>
-        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">Size Limit</p>
-          <p className="mt-1 text-lg font-semibold text-(--primary)">8MB each</p>
-        </div>
-        <div className="rounded-(--radius) border border-(--border) bg-white p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-(--text-muted)">Status</p>
-          <p className="mt-1 text-lg font-semibold text-(--primary)">{isUploading ? "Uploading" : uploadedImageUrls.length > 0 ? "Ready" : "Pending"}</p>
-        </div>
-      </div>
+      )}
 
       <div className="rounded-(--radius) border border-dashed border-(--border) bg-[radial-gradient(circle_at_top,rgba(206,138,60,0.10),transparent_65%),var(--surface-raised)] p-8 text-center">
         <input
@@ -219,7 +250,6 @@ export function Step6Photos({
         >
           {files.length >= MAX_FILES ? "Photo Limit Reached" : "Choose Photos"}
         </button>
-        <p className="mt-2 text-xs text-(--text-muted)">PNG, JPG, WEBP up to 8MB each.</p>
       </div>
 
       {uploadTotalCount > 0 && (
@@ -228,16 +258,10 @@ export function Step6Photos({
             <span className="font-semibold">{isUploading ? `Uploading photos (${uploadCompletedCount}/${uploadTotalCount})` : `Upload complete (${uploadCompletedCount}/${uploadTotalCount})`}</span>
             <span>{uploadPercentage}%</span>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-(--border)">
+          <div className="mt-2 h-1 overflow-hidden rounded-full bg-(--border)">
             <div className="h-full rounded-full bg-(--accent) transition-all duration-300" style={{ width: `${uploadPercentage}%` }} />
           </div>
           {isUploading && currentFileName && <p className="mt-2 truncate text-xs text-(--text-muted)">Uploading {currentFileName}</p>}
-        </div>
-      )}
-
-      {uploadedImageUrls.length > 0 && (
-        <div className="rounded-(--radius) border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Photos uploaded successfully. You are ready to continue to the final review step.
         </div>
       )}
 
@@ -313,12 +337,6 @@ export function Step6Photos({
               </button>
             </div>
           ))}
-        </div>
-      )}
-
-      {files.length === 0 && (
-        <div className="rounded-(--radius) border border-(--border) bg-white px-4 py-3 text-xs text-(--text-muted)">
-          No photos selected yet. Add images to unlock upload and continue.
         </div>
       )}
     </div>
