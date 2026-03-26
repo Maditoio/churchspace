@@ -83,6 +83,13 @@ export function Navbar({ session }: { session: Session | null }) {
                         Dashboard
                       </Link>
                       <Link
+                        href="/dashboard/listings"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border)"
+                      >
+                        My Listings
+                      </Link>
+                      <Link
                         href="/dashboard/profile"
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border)"
@@ -141,6 +148,7 @@ export function Navbar({ session }: { session: Session | null }) {
                     <span className="font-semibold text-(--text-primary)">{session.user?.name ?? (isAdmin ? "Admin Panel" : "Dashboard")}</span>
                   </Link>
                 </div>
+                <Link href="/dashboard/listings" onClick={() => setOpen(false)}>My Listings</Link>
                 <Link href="/dashboard/alerts" onClick={() => setOpen(false)}>Listing Alerts</Link>
                 <Link href="/dashboard/profile" onClick={() => setOpen(false)}>Profile</Link>
                 <Link href="/support" onClick={() => setOpen(false)}>Support</Link>

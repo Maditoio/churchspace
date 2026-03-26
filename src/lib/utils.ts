@@ -13,9 +13,9 @@ export function formatPrice(value?: number | string | null, suffix = "") {
   if (Number.isNaN(numeric)) {
     return "POA";
   }
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-ZA", {
     style: "currency",
-    currency: "USD",
+    currency: "ZAR",
     minimumFractionDigits: 2,
   }).format(numeric) + suffix;
 }
