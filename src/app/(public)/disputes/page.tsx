@@ -80,11 +80,11 @@ export default function DisputesPage() {
           <p className="font-medium text-[var(--text-primary)]">Prefer to contact us directly?</p>
           <div className="flex flex-wrap gap-3">
             <a
-              href="mailto:spaceschurch@gmail.com?subject=Dispute%20-%20ChurchSpaces"
+              href="mailto:hello@churchspaces.church?subject=Dispute%20-%20ChurchSpaces"
               className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-2 font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"
             >
               <Mail className="h-4 w-4" />
-              spaceschurch@gmail.com
+              hello@churchspaces.church
             </a>
             <a
               href="tel:+27766767752"
@@ -103,7 +103,7 @@ export default function DisputesPage() {
             <div className="rounded-[28px] border border-[var(--border)] bg-white p-8 shadow-[var(--shadow-sm)]">
               <h2 className="mb-6 text-xl font-semibold text-[var(--text-primary)]">Dispute Details</h2>
               <form
-                action="mailto:spaceschurch@gmail.com"
+                action="mailto:hello@churchspaces.church"
                 method="GET"
                 className="space-y-5"
               >
@@ -215,6 +215,7 @@ export default function DisputesPage() {
             {/* Dispute types */}
             <div className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-sm)]">
               <h3 className="mb-4 text-base font-semibold text-[var(--text-primary)]">What can be disputed?</h3>
+              <p className="mb-4 text-xs leading-5 text-[var(--text-secondary)]">Office location: Johannesburg, Craddock Square Rosebank, 169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196.</p>
               <ul className="space-y-3">
                 {disputeTypes.map((t) => (
                   <li key={t.value}>

@@ -118,7 +118,7 @@ const sections = [
   {
     title: "16. Contact",
     body: [
-      "For questions about this User Policy, reports, enforcement requests, or support matters, contact ChurchSpaces via the support page or email hello@churchspaces.co.za.",
+      "For questions about this User Policy, reports, enforcement requests, or support matters, contact ChurchSpaces via the support page or email hello@churchspaces.church. Our office address is Johannesburg, Craddock Square Rosebank, 169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196.",
     ],
   },
 ];

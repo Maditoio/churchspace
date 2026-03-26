@@ -24,7 +24,7 @@ export default function SupportPage() {
       description: "Send us an email and we\u2019ll respond within 24 hours",
       icon: Mail,
       action: "Send Email",
-      href: "mailto:spaceschurch@gmail.com",
+      href: "mailto:hello@churchspaces.church",
     },
     {
       id: "phone",
@@ -53,6 +53,9 @@ export default function SupportPage() {
         </h1>
         <p className="text-lg text-(--text-secondary) max-w-2xl mx-auto">
           We&apos;re here to support you. Choose your preferred way to get in touch with our team.
+        </p>
+        <p className="mt-4 text-sm leading-7 text-(--text-secondary)">
+          Visit us at Johannesburg, Craddock Square Rosebank, 169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196.
         </p>
       </section>
 
@@ -138,7 +141,7 @@ export default function SupportPage() {
             <Link href="/disputes">
               <Button variant="primary">Open Dispute Form</Button>
             </Link>
-            <a href="mailto:spaceschurch@gmail.com?subject=Dispute%20-%20ChurchSpaces">
+            <a href="mailto:hello@churchspaces.church?subject=Dispute%20-%20ChurchSpaces">
               <Button variant="outlineAccent">Email Us Directly</Button>
             </a>
             <a href="tel:+27766767752">
@@ -198,7 +201,7 @@ export default function SupportPage() {
           <div className="mt-8 pt-8 border-t border-(--border)">
             <p className="text-(--text-secondary) mb-4">Still have questions?</p>
             <div className="flex flex-wrap gap-3">
-              <a href="mailto:spaceschurch@gmail.com">
+              <a href="mailto:hello@churchspaces.church">
                 <Button variant="outlineAccent">Email Support</Button>
               </a>
               <a href="tel:+27766767752">

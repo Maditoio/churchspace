@@ -124,7 +124,7 @@ const sections = [
   {
     title: "16. Contact Us",
     body: [
-      "If you have questions about this Privacy Policy, your information, or your privacy rights, contact ChurchSpaces via our support channels or email us at hello@churchspaces.co.za.",
+      "If you have questions about this Privacy Policy, your information, or your privacy rights, contact ChurchSpaces via our support channels or email us at hello@churchspaces.church. Our office address is Johannesburg, Craddock Square Rosebank, 169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196.",
     ],
   },
 ];

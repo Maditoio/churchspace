@@ -90,8 +90,9 @@ export async function Footer() {
         </div>
         <div>
           <h4 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Contact</h4>
-          <a href="mailto:spaceschurch@gmail.com" className="block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">spaceschurch@gmail.com</a>
+          <a href="mailto:hello@churchspaces.church" className="block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">hello@churchspaces.church</a>
           <a href="tel:+27766767752" className="mt-1 block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">+27 76 676 7752</a>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">Johannesburg, Craddock Square Rosebank<br />169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196</p>
           <Link href="/disputes" className="mt-3 block text-sm font-medium text-[var(--primary)] hover:underline">File a Dispute</Link>
         </div>
       </div>
