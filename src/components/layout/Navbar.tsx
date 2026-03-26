@@ -54,12 +54,13 @@ export function Navbar({ session }: { session: Session | null }) {
           {session ? (
             <div className="flex items-center gap-3">
               {/* Notifications icon */}
-              <button
+              <Link
+                href="/dashboard/notifications"
                 aria-label="Notifications"
                 className="rounded-full border border-(--border) bg-white/70 p-2.5 transition-all hover:bg-(--primary-soft) hover:text-(--primary) shadow-(--shadow-sm)"
               >
                 <Bell className="h-5 w-5 text-(--text-secondary)" />
-              </button>
+              </Link>
 
               {/* Avatar dropdown trigger */}
               <div ref={dropdownRef} className="relative">
@@ -78,28 +79,35 @@ export function Navbar({ session }: { session: Session | null }) {
                       <Link
                         href={isAdmin ? "/admin" : "/dashboard"}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border) first:rounded-t-[20px]"
+                        className="flex items-center border-b border-(--border) px-4 py-3 text-sm font-medium text-foreground hover:bg-(--primary-soft) hover:text-(--primary) first:rounded-t-[20px]"
                       >
                         Dashboard
                       </Link>
                       <Link
+                        href="/dashboard/notifications"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center border-b border-(--border) px-4 py-3 text-sm font-medium text-foreground hover:bg-(--primary-soft) hover:text-(--primary)"
+                      >
+                        Notifications
+                      </Link>
+                      <Link
                         href="/dashboard/listings"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border)"
+                        className="flex items-center border-b border-(--border) px-4 py-3 text-sm font-medium text-foreground hover:bg-(--primary-soft) hover:text-(--primary)"
                       >
                         My Listings
                       </Link>
                       <Link
                         href="/dashboard/profile"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border)"
+                        className="flex items-center border-b border-(--border) px-4 py-3 text-sm font-medium text-foreground hover:bg-(--primary-soft) hover:text-(--primary)"
                       >
                         Profile
                       </Link>
                       <Link
                         href="/support"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) border-b border-(--border)"
+                        className="flex items-center border-b border-(--border) px-4 py-3 text-sm font-medium text-foreground hover:bg-(--primary-soft) hover:text-(--primary)"
                       >
                         Support
                       </Link>
@@ -108,7 +116,7 @@ export function Navbar({ session }: { session: Session | null }) {
                           setDropdownOpen(false);
                           signOut({ callbackUrl: "/" });
                         }}
-                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-(--text-primary) hover:bg-(--primary-soft) hover:text-(--primary) last:rounded-b-[20px]"
+                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-foreground hover:bg-(--primary-soft) hover:text-(--primary) last:rounded-b-[20px]"
                       >
                         <LogOut className="h-4 w-4" />
                         <span>Sign Out</span>
@@ -142,18 +150,19 @@ export function Navbar({ session }: { session: Session | null }) {
             </Link>
             {session ? (
               <>
-                <div className="rounded-[24px] border border-(--border) bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,239,230,0.96))] p-4 shadow-(--shadow-sm)">
+                <div className="rounded-3xl border border-(--border) bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(244,239,230,0.96))] p-4 shadow-(--shadow-sm)">
                   <Link href={isAdmin ? "/admin" : "/dashboard"} onClick={() => setOpen(false)} className="flex items-center gap-3">
                     <Avatar src={session.user?.image} name={session.user?.name} size={40} />
-                    <span className="font-semibold text-(--text-primary)">{session.user?.name ?? (isAdmin ? "Admin Panel" : "Dashboard")}</span>
+                    <span className="font-semibold text-foreground">{session.user?.name ?? (isAdmin ? "Admin Panel" : "Dashboard")}</span>
                   </Link>
                 </div>
+                <Link href="/dashboard/notifications" onClick={() => setOpen(false)}>Notifications</Link>
                 <Link href="/dashboard/listings" onClick={() => setOpen(false)}>My Listings</Link>
                 <Link href="/dashboard/alerts" onClick={() => setOpen(false)}>Listing Alerts</Link>
                 <Link href="/dashboard/profile" onClick={() => setOpen(false)}>Profile</Link>
                 <Link href="/support" onClick={() => setOpen(false)}>Support</Link>
                 <button
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(123,84,42,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(247,242,235,0.96))] px-4 py-3 text-sm font-semibold text-(--text-primary) shadow-(--shadow-sm)"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(123,84,42,0.16)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(247,242,235,0.96))] px-4 py-3 text-sm font-semibold text-foreground shadow-(--shadow-sm)"
                   onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
                 >
                   <LogOut className="h-4 w-4" /> Sign Out
