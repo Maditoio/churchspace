@@ -123,6 +123,10 @@ export default function SupportPage() {
             If you have experienced a problem with a listing, a payment, or another user on the platform, you can
             file a formal dispute and our team will investigate within 2–3 business days.
           </p>
+          <div className="mb-6 rounded-[16px] border border-(--border) bg-(--surface-raised) p-4 text-sm leading-6 text-(--text-secondary)">
+            <p><strong className="text-(--text-primary)">Refund policy highlight:</strong> Listing fees are non-refundable once a listing has been approved and published.</p>
+            <p className="mt-2">Disputes must be raised within 7 days of payment for review.</p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-sm">
             <div className="rounded-[16px] border border-(--border) bg-(--surface-raised) p-4">
               <p className="font-semibold text-(--text-primary) mb-1">Listing Disputes</p>
@@ -181,6 +185,15 @@ export default function SupportPage() {
             </details>
             <details className="group cursor-pointer">
               <summary className="flex items-center justify-between py-4 px-0 border-b border-(--border) text-lg font-medium text-(--text-primary) hover:text-(--primary) transition-colors">
+                <span>Can I get a refund after my listing is approved?</span>
+                <span className="text-2xl group-open:rotate-180 transition-transform">+</span>
+              </summary>
+              <p className="pt-4 pb-4 text-(--text-secondary)">
+                No. Listing fees are non-refundable once a listing is approved and published. Refunds are only considered for cases like duplicate charges, payment captured but no publication, or listings rejected by platform review.
+              </p>
+            </details>
+            <details className="group cursor-pointer">
+              <summary className="flex items-center justify-between py-4 px-0 border-b border-(--border) text-lg font-medium text-(--text-primary) hover:text-(--primary) transition-colors">
                 <span>How long does approval take?</span>
                 <span className="text-2xl group-open:rotate-180 transition-transform">+</span>
               </summary>
@@ -209,7 +222,7 @@ export default function SupportPage() {
               </a>
             </div>
             <div className="mt-6 rounded-[20px] bg-(--surface-raised) p-5 text-sm leading-6 text-(--text-secondary)">
-              Before contacting support, you can also review our <Link href="/privacy-policy" className="font-medium text-(--primary) hover:underline">Privacy Policy</Link> and <Link href="/user-policy" className="font-medium text-(--primary) hover:underline">User Policy</Link> for details about how ChurchSpaces handles accounts, listings, enquiries, payments, and user responsibilities.
+              Before contacting support, review our <Link href="/privacy-policy" className="font-medium text-(--primary) hover:underline">Privacy Policy</Link>, <Link href="/user-policy" className="font-medium text-(--primary) hover:underline">User Policy</Link>, <Link href="/refund-policy" className="font-medium text-(--primary) hover:underline">Refund Policy</Link>, and <Link href="/disclaimer" className="font-medium text-(--primary) hover:underline">Disclaimer</Link> for payment, listing, and dispute rules.
             </div>
           </div>
         </div>

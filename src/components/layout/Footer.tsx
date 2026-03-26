@@ -85,6 +85,8 @@ export async function Footer() {
           <ul className="space-y-2 text-sm text-[var(--text-secondary)]">
             <li><Link href="/privacy-policy">Privacy Policy</Link></li>
             <li><Link href="/user-policy">User Policy</Link></li>
+            <li><Link href="/refund-policy">Refund Policy</Link></li>
+            <li><Link href="/disclaimer">Disclaimer</Link></li>
             <li><Link href="/disputes">File a Dispute</Link></li>
           </ul>
         </div>

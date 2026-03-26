@@ -141,7 +141,7 @@ export default function PrivacyPolicyPage() {
             saved listings, listing enquiries, listing payments, uploaded media, notifications, support requests, and admin review.
           </p>
           <div className="mt-6 rounded-[24px] bg-[var(--surface-raised)] p-5 text-sm leading-6 text-[var(--text-secondary)]">
-            <p><strong className="text-[var(--text-primary)]">Last updated:</strong> 25 March 2026</p>
+            <p><strong className="text-[var(--text-primary)]">Last updated:</strong> 26 March 2026</p>
             <p className="mt-2"><strong className="text-[var(--text-primary)]">Summary:</strong> We collect the information needed to run the marketplace, authenticate users, manage listings, process enquiries, confirm listing payments, send relevant emails, and keep the platform safe.</p>
           </div>
 
@@ -159,6 +159,12 @@ export default function PrivacyPolicyPage() {
           </div>
 
           <div className="mt-12 flex flex-wrap gap-3 border-t border-[var(--border)] pt-8">
+            <Link href="/refund-policy" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
+              Read Refund Policy
+            </Link>
+            <Link href="/disclaimer" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
+              Read Disclaimer
+            </Link>
             <Link href="/user-policy" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
               Read User Policy
             </Link>

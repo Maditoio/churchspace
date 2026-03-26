@@ -61,9 +61,13 @@ const sections = [
   {
     title: "8. Payments and Paid Features",
     body: [
-      "Where ChurchSpaces charges a listing fee or similar payment, you are responsible for ensuring that the payment information you provide is authorised and accurate. Paid features may be linked to listing activation, payment status, listing visibility periods, or related listing benefits.",
-      "Payment does not guarantee permanent visibility, uninterrupted availability, approval of a listing, or immunity from moderation or enforcement. Listings may still be edited, suspended, rejected, removed, or investigated if they breach platform rules, legal requirements, or quality standards.",
-      "You are responsible for reviewing the price, currency, renewal or expiry implications, and any relevant provider terms before completing payment.",
+      "ChurchSpaces charges listing fees for listing and advertising exposure services. By paying, you purchase platform publishing and visibility services, not a guarantee of leads, bookings, or revenue.",
+      "All listing fees are non-refundable once a listing is approved and published. This applies even if listing performance is lower than expected, enquiries are fewer than expected, or the agent later changes their mind.",
+      "Refunds may be considered only in limited cases at ChurchSpaces' sole discretion, including confirmed duplicate charge, payment captured but listing never published, or payment taken for a listing that is rejected by platform review.",
+      "No refund is due for lack of leads, listing expiry, inaccurate listing details submitted by the agent, policy-enforcement removal, or voluntary listing withdrawal.",
+      "Disputes about listing payments must be submitted within 7 days of payment unless otherwise required by applicable law.",
+      "Payment does not guarantee permanent visibility, uninterrupted availability, approval of future listings, or immunity from moderation or enforcement. Listings may still be edited, suspended, rejected, removed, or investigated if they breach platform rules, legal requirements, or quality standards.",
+      "You are responsible for reviewing the price, currency, expiry implications, and applicable third-party provider terms before completing payment.",
     ],
   },
   {
@@ -93,6 +97,9 @@ const sections = [
     title: "12. Platform Availability and Disclaimer",
     body: [
       "ChurchSpaces provides a marketplace and workflow platform. We do not independently guarantee every statement made in a listing, every user's identity, every payment outcome, or the suitability of every property for a particular purpose. Users should perform their own due diligence before entering into off-platform agreements or making operational decisions based on listing content.",
+      "ChurchSpaces does not guarantee listing performance, views, enquiries, bookings, occupancy, or income from any listing.",
+      "Agents are solely responsible for listing accuracy and lawful authority to market the listed property.",
+      "ChurchSpaces may remove, suspend, or restrict listings that violate platform rules or legal obligations, including without refund where permitted by law and policy.",
       "We aim to keep the service available and accurate, but features may change, pause, or fail due to maintenance, third-party outages, technical issues, moderation actions, or legal obligations.",
     ],
   },
@@ -135,8 +142,8 @@ export default function UserPolicyPage() {
             payments should be handled, and how moderation works when platform rules are broken.
           </p>
           <div className="mt-6 rounded-[24px] bg-[var(--surface-raised)] p-5 text-sm leading-6 text-[var(--text-secondary)]">
-            <p><strong className="text-[var(--text-primary)]">Last updated:</strong> 25 March 2026</p>
-            <p className="mt-2"><strong className="text-[var(--text-primary)]">Summary:</strong> Be accurate, act in good faith, use listing and enquiry tools for legitimate property activity, and do not misuse platform content, payments, or other users&apos; information.</p>
+            <p><strong className="text-[var(--text-primary)]">Last updated:</strong> 26 March 2026</p>
+            <p className="mt-2"><strong className="text-[var(--text-primary)]">Summary:</strong> Listing fees are primarily non-refundable once approved and published, results are never guaranteed, and dispute windows are time-limited.</p>
           </div>
 
           <div className="mt-10 space-y-10">
@@ -153,6 +160,12 @@ export default function UserPolicyPage() {
           </div>
 
           <div className="mt-12 flex flex-wrap gap-3 border-t border-[var(--border)] pt-8">
+            <Link href="/refund-policy" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
+              Read Refund Policy
+            </Link>
+            <Link href="/disclaimer" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
+              Read Disclaimer
+            </Link>
             <Link href="/privacy-policy" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
               Read Privacy Policy
             </Link>

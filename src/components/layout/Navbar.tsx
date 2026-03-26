@@ -178,6 +178,8 @@ export function Navbar({ session }: { session: Session | null }) {
               <div className="flex flex-col gap-2">
                 <Link href="/privacy-policy" onClick={() => setOpen(false)} className="hover:text-(--primary)">Privacy Policy</Link>
                 <Link href="/user-policy" onClick={() => setOpen(false)} className="hover:text-(--primary)">User Policy</Link>
+                <Link href="/refund-policy" onClick={() => setOpen(false)} className="hover:text-(--primary)">Refund Policy</Link>
+                <Link href="/disclaimer" onClick={() => setOpen(false)} className="hover:text-(--primary)">Disclaimer</Link>
               </div>
             </div>
           </div>

@@ -18,6 +18,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/disputes`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/privacy-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.35 },
     { url: `${siteUrl}/user-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.35 },
+    { url: `${siteUrl}/refund-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.35 },
+    { url: `${siteUrl}/disclaimer`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   const countryPages: MetadataRoute.Sitemap = Object.keys(AFRICA_LOCATIONS).map((country) => ({

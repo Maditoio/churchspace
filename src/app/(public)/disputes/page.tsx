@@ -73,6 +73,9 @@ export default function DisputesPage() {
             Our team investigates all disputes fairly and aims to resolve them within 2&ndash;3 business days.
             Use the form or contact us directly.
           </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
+            For payment disputes, requests should be submitted within 7 days of payment. Listing fees are non-refundable once approved and published.
+          </p>
         </div>
 
         {/* Direct contact bar */}
@@ -233,6 +236,12 @@ export default function DisputesPage() {
         <div className="mt-10 flex flex-wrap gap-3">
           <Link href="/support" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
             ← Back to Support
+          </Link>
+          <Link href="/refund-policy" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
+            Refund Policy
+          </Link>
+          <Link href="/disclaimer" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
+            Disclaimer
           </Link>
           <Link href="/user-policy" className="inline-flex rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
             User Policy

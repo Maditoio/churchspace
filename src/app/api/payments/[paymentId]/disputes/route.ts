@@ -5,6 +5,8 @@ import { activePaymentDisputeStatuses } from "@/lib/payment-disputes";
 import { prisma } from "@/lib/prisma";
 import { paymentDisputeCreateSchema } from "@/lib/validations";
 
+const DISPUTE_WINDOW_DAYS = 7;
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ paymentId: string }> }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -40,6 +42,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (payment.disputes.length > 0) {
     return NextResponse.json({ error: "There is already an active dispute for this payment." }, { status: 409 });
+  }
+
+  const disputeDeadline = new Date(payment.paidAt);
+  disputeDeadline.setDate(disputeDeadline.getDate() + DISPUTE_WINDOW_DAYS);
+  if (new Date() > disputeDeadline) {
+    return NextResponse.json({ error: `Disputes must be raised within ${DISPUTE_WINDOW_DAYS} days of payment.` }, { status: 400 });
   }
 
   const admins = await prisma.user.findMany({
