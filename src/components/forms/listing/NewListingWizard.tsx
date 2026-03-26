@@ -83,6 +83,7 @@ async function uploadFileToBlob(file: File) {
 export function NewListingWizard() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmAccuracy, setConfirmAccuracy] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
   const [imageMetadata, setImageMetadata] = useState<Map<string, ImageFileWithOrder>>(new Map());
@@ -304,7 +305,7 @@ export function NewListingWizard() {
       await response.json();
 
 
-      toast.success("Listing submitted for review.");
+      toast.success("Listing submitted for review. We will notify you once the review is complete.");
       router.push("/dashboard/listings");
       router.refresh();
     } finally {
@@ -357,6 +358,11 @@ export function NewListingWizard() {
                     }}
                     onImageOrderChanged={handleImageOrderChanged}
                   />
+                ) : currentStep === 7 ? (
+                  <Step7Review
+                    confirmAccuracy={confirmAccuracy}
+                    onConfirmAccuracyChange={setConfirmAccuracy}
+                  />
                 ) : (
                   <StepComponent />
                 )}
@@ -403,7 +409,7 @@ export function NewListingWizard() {
                 : "Next Step"}
             </Button>
           ) : (
-            <Button type="button" onClick={handleSubmitClick} disabled={submitting || uploadingPhotos}>
+            <Button type="button" onClick={handleSubmitClick} disabled={submitting || uploadingPhotos || !confirmAccuracy}>
               {submitting ? "Submitting listing..." : "Submit for Review"}
             </Button>
           )}
