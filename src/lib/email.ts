@@ -7,6 +7,7 @@ const configuredBaseUrl =
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ??
   "https://churchspaces.co.za";
 const appBaseUrl = configuredBaseUrl.replace(/\/$/, "");
+const brandName = "ChurchSpaces";
 const supportEmail = "hello@churchspaces.church";
 const supportPhone = "+27 76 676 7752";
 const supportOfficeLabel = "Johannesburg, Craddock Square Rosebank";
@@ -61,8 +62,13 @@ async function sendEmail(to: string, subject: string, html: string, replyTo?: st
     console.warn("[email] skipped send: RESEND_API_KEY or RESEND_FROM_EMAIL missing");
     return;
   }
+
+  const fromAddress = process.env.RESEND_FROM_EMAIL.includes("<")
+    ? process.env.RESEND_FROM_EMAIL
+    : `${brandName} <${process.env.RESEND_FROM_EMAIL}>`;
+
   await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL,
+    from: fromAddress,
     to,
     subject,
     html,
@@ -161,30 +167,36 @@ export async function sendEnquiryEmails(args: {
     </div>
   `;
 
-  await sendEmail(
-    args.agentEmail,
-    `New Viewing Request for ${args.listingTitle}`,
-    standardEmailTemplate({
-      title: "New Viewing Request",
-      body: `<p>You have received a new viewing request for <strong>${safeTitle}</strong>.</p>${detailsBlock}<p>You can reply directly to this email to continue the conversation.</p>`,
-      ctaHref: listingUrl,
-      ctaLabel: "View Listing",
-      eyebrow: "Viewing Request",
-    }),
-    args.senderEmail,
-  );
+  const [agentNotification, senderConfirmation] = await Promise.allSettled([
+    sendEmail(
+      args.agentEmail,
+      `New Viewing Request for ${args.listingTitle}`,
+      standardEmailTemplate({
+        title: "New Viewing Request",
+        body: `<p>You have received a new viewing request for <strong>${safeTitle}</strong>.</p>${detailsBlock}<p>You can reply directly to this email to continue the conversation.</p>`,
+        ctaHref: listingUrl,
+        ctaLabel: "View Listing",
+        eyebrow: "Viewing Request",
+      }),
+      args.senderEmail,
+    ),
+    sendEmail(
+      args.senderEmail,
+      `Your Viewing Request for ${args.listingTitle}`,
+      standardEmailTemplate({
+        title: "Viewing Request Sent",
+        body: `<p>Thanks ${safeSenderName}, your viewing request has been sent to the listing owner for <strong>${safeTitle}</strong>.</p>${detailsBlock}<p>The owner can respond directly to your email address.</p>`,
+        ctaHref: listingUrl,
+        ctaLabel: "View Listing",
+        eyebrow: "Confirmation",
+      }),
+    ),
+  ]);
 
-  await sendEmail(
-    args.senderEmail,
-    `Your Viewing Request for ${args.listingTitle}`,
-    standardEmailTemplate({
-      title: "Viewing Request Sent",
-      body: `<p>Thanks ${safeSenderName}, your viewing request has been sent to the listing owner for <strong>${safeTitle}</strong>.</p>${detailsBlock}<p>The owner can respond directly to your email address.</p>`,
-      ctaHref: listingUrl,
-      ctaLabel: "View Listing",
-      eyebrow: "Confirmation",
-    }),
-  );
+  return {
+    agentNotificationSent: agentNotification.status === "fulfilled",
+    senderConfirmationSent: senderConfirmation.status === "fulfilled",
+  };
 }
 
 export async function sendListingRecommendationsEmail(args: {

@@ -28,32 +28,45 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const parsed = enquirySchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  try {
+    const body = await request.json();
+    const parsed = enquirySchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const listing = await prisma.listing.findUnique({ where: { id: parsed.data.listingId }, include: { agent: true } });
-  if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+    const listing = await prisma.listing.findUnique({ where: { id: parsed.data.listingId }, include: { agent: true } });
+    if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
 
-  const session = await auth();
-  const enquiry = await prisma.enquiry.create({
-    data: {
-      ...parsed.data,
-      senderId: session?.user?.id,
-    },
-  });
+    const session = await auth();
+    const enquiry = await prisma.enquiry.create({
+      data: {
+        ...parsed.data,
+        senderId: session?.user?.id,
+      },
+    });
 
-  await sendEnquiryEmails({
-    agentEmail: listing.agent.email,
-    senderEmail: parsed.data.senderEmail,
-    senderName: parsed.data.senderName,
-    senderPhone: parsed.data.senderPhone,
-    listingTitle: listing.title,
-    listingSlug: listing.slug,
-    listingCity: listing.city,
-    listingSuburb: listing.suburb,
-    message: parsed.data.message,
-  });
+    const emailDispatch = await sendEnquiryEmails({
+      agentEmail: listing.agent.email,
+      senderEmail: parsed.data.senderEmail,
+      senderName: parsed.data.senderName,
+      senderPhone: parsed.data.senderPhone,
+      listingTitle: listing.title,
+      listingSlug: listing.slug,
+      listingCity: listing.city,
+      listingSuburb: listing.suburb,
+      message: parsed.data.message,
+    });
 
-  return NextResponse.json({ enquiry }, { status: 201 });
+    if (!emailDispatch.agentNotificationSent || !emailDispatch.senderConfirmationSent) {
+      console.error("[enquiries] email delivery incomplete", {
+        enquiryId: enquiry.id,
+        listingId: listing.id,
+        emailDispatch,
+      });
+    }
+
+    return NextResponse.json({ enquiry, emailDispatch }, { status: 201 });
+  } catch (error) {
+    console.error("[enquiries] failed to create enquiry", error);
+    return NextResponse.json({ error: "Could not send enquiry" }, { status: 500 });
+  }
 }
