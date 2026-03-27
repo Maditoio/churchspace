@@ -1,7 +1,4 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 
 export const metadata: Metadata = {
   title: "Contact ChurchSpaces",
@@ -14,27 +11,57 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="mx-auto max-w-[720px] px-4 py-16 md:px-8">
-      <h1 className="font-display text-5xl text-[var(--text-primary)]">Contact ChurchSpaces</h1>
+    <div className="mx-auto max-w-[640px] px-4 py-20 md:px-8">
+      <h1 className="font-display text-5xl text-[var(--text-primary)]">Get in Touch</h1>
       <p className="mt-4 text-sm leading-7 text-[var(--text-secondary)]">
-        Need help finding a church building to rent, buying church property, or shortlisting conference and youth ministry venues? Send us a message and
-        our team will help you move faster.
+        We are here to help you find or list church spaces across South Africa. Reach us through any of the channels below.
       </p>
-      <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-white p-6 text-sm leading-7 text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
-        <p><strong className="text-[var(--text-primary)]">Email:</strong> <a href="mailto:hello@churchspaces.church" className="text-[var(--primary)] hover:underline">hello@churchspaces.church</a></p>
-        <p><strong className="text-[var(--text-primary)]">Phone:</strong> <a href="tel:+27766767752" className="text-[var(--primary)] hover:underline">+27 76 676 7752</a></p>
-        <p><strong className="text-[var(--text-primary)]">Head Office:</strong> Johannesburg, Craddock Square Rosebank</p>
-        <p>169 Oxford Road, Rosebank, Craddock Square, Johannesburg, 2196</p>
-      </div>
-      <form className="mt-8 space-y-4 rounded-[var(--radius)] border border-[var(--border)] bg-white p-6">
-        <Input placeholder="Your name" />
-        <Input type="email" placeholder="Email" />
-        <Input placeholder="Subject" />
-        <textarea className="min-h-36 w-full rounded-[8px] border border-[var(--border)] p-3" placeholder="How can we help?" />
-        <Button variant="accent">Send Message</Button>
-      </form>
-      <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-raised)] p-5 text-sm leading-7 text-[var(--text-secondary)]">
-        Before submitting personal information, you can review our <Link href="/privacy-policy" className="font-medium text-[var(--primary)] hover:underline">Privacy Policy</Link> and <Link href="/user-policy" className="font-medium text-[var(--primary)] hover:underline">User Policy</Link> for details about how ChurchSpaces handles contact requests, account information, listings, enquiries, and payments.
+
+      <div className="mt-12 space-y-10">
+        {/* General enquiries */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">General Enquiries</p>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="w-16 shrink-0 text-xs text-[var(--text-muted)]">Email</span>
+              <a href="mailto:hello@churchspaces.church" className="text-sm text-[var(--primary)] hover:underline">hello@churchspaces.church</a>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="w-16 shrink-0 text-xs text-[var(--text-muted)]">Phone</span>
+              <a href="tel:+27766767752" className="text-sm text-[var(--text-primary)]">+27 76 676 7752</a>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--border)]" />
+
+        {/* Support */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Support</p>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="w-16 shrink-0 text-xs text-[var(--text-muted)]">Email</span>
+              <a href="mailto:support@churchspaces.church" className="text-sm text-[var(--primary)] hover:underline">support@churchspaces.church</a>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="w-16 shrink-0 text-xs text-[var(--text-muted)]">Hours</span>
+              <p className="text-sm text-[var(--text-secondary)]">Monday – Friday, 08:00 – 17:00 SAST</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--border)]" />
+
+        {/* Address */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Head Office</p>
+          <div className="mt-4">
+            <p className="text-sm text-[var(--text-primary)]">Craddock Square, Rosebank</p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">169 Oxford Road, Rosebank</p>
+            <p className="text-sm text-[var(--text-secondary)]">Johannesburg, 2196</p>
+            <p className="text-sm text-[var(--text-secondary)]">South Africa</p>
+          </div>
+        </div>
       </div>
     </div>
   );
