@@ -82,10 +82,25 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
     "Welcome to ChurchSpaces",
     standardEmailTemplate({
       title: "Welcome to ChurchSpaces",
-      body: `<p>Hi ${name ?? "there"}, welcome to ChurchSpaces. You can now list, discover, and connect with trusted church spaces across South Africa.</p>`,
+      body: `<p>Hi ${name ?? "there"}, welcome to ChurchSpaces. Your email has been verified and your account is now active. You can now list, discover, and connect with trusted church spaces.</p>`,
       ctaHref: `${appBaseUrl}/dashboard`,
       ctaLabel: "Go to Dashboard",
       eyebrow: "Welcome",
+    }),
+  );
+}
+
+export async function sendEmailVerificationEmail(args: { to: string; name?: string | null; token: string; email: string }) {
+  const verifyUrl = `${appBaseUrl}/api/auth/verify-email?token=${encodeURIComponent(args.token)}&email=${encodeURIComponent(args.email)}`;
+  return sendEmail(
+    args.to,
+    "Verify your ChurchSpaces email address",
+    standardEmailTemplate({
+      title: "Verify Your Email Address",
+      body: `<p>Hi ${args.name ?? "there"}, thanks for joining ChurchSpaces.</p><p>Please click the button below to verify your email address and activate your account. This link expires in <strong>24 hours</strong>.</p><p style="font-size:13px;color:#7A7A8C;">If you did not create a ChurchSpaces account, you can safely ignore this email.</p>`,
+      ctaHref: verifyUrl,
+      ctaLabel: "Verify Email Address",
+      eyebrow: "Account Activation",
     }),
   );
 }

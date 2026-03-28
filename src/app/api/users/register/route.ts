@@ -1,8 +1,11 @@
+import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendEmailVerificationEmail } from "@/lib/email";
 import { signUpSchema } from "@/lib/validations";
+
+const EMAIL_VERIFICATION_TTL_HOURS = 24;
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +29,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await sendWelcomeEmail(user.email, user.name);
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + EMAIL_VERIFICATION_TTL_HOURS * 60 * 60 * 1000);
+
+    await prisma.verificationToken.create({
+      data: { identifier: user.email, token, expires },
+    });
+
+    await sendEmailVerificationEmail({ to: user.email, name: user.name, token, email: user.email });
 
     return NextResponse.json({ user: { id: user.id, email: user.email } }, { status: 201 });
   } catch (error) {

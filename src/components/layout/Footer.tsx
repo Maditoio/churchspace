@@ -16,7 +16,7 @@ export async function Footer() {
 
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--surface)]">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-14 md:grid-cols-2 lg:grid-cols-6 md:px-8">
+      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-14 md:grid-cols-2 lg:grid-cols-5 md:px-8">
         <div>
           <h3 className="font-display text-3xl text-[var(--primary)]">ChurchSpaces</h3>
           <p className="mt-3 text-sm text-[var(--text-secondary)]">Premium marketplace for trusted church spaces across Africa.</p>
@@ -57,7 +57,6 @@ export async function Footer() {
             <li><Link href="/search">Search</Link></li>
             <li><Link href="/bond-calculator">Bond Calculator</Link></li>
             <li><Link href="/about">About</Link></li>
-            <li><Link href="/contact">Contact</Link></li>
           </ul>
         </div>
         <div>
@@ -89,12 +88,6 @@ export async function Footer() {
             <li><Link href="/disclaimer">Disclaimer</Link></li>
             <li><Link href="/disputes">File a Dispute</Link></li>
           </ul>
-        </div>
-        <div>
-          <h4 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Contact</h4>
-          <a href="mailto:hello@churchspaces.church" className="block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">hello@churchspaces.church</a>
-          <a href="tel:+27766767752" className="mt-1 block text-sm text-[var(--text-secondary)] hover:text-[var(--primary)]">+27 76 676 7752</a>
-          <Link href="/disputes" className="mt-3 block text-sm font-medium text-[var(--primary)] hover:underline">File a Dispute</Link>
         </div>
       </div>
     </footer>

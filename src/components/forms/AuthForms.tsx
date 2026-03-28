@@ -39,7 +39,7 @@ export function SignInForm() {
       }
 
       if (result.error === "CredentialsSignin") {
-        toast.error("Invalid email or password.");
+        toast.error("Invalid email or password. If you recently registered, please verify your email first.");
         return;
       }
 
@@ -91,8 +91,8 @@ export function SignUpForm() {
       return;
     }
 
-    toast.success("Account created. You can sign in now.");
-    router.push("/signin");
+    toast.success("Account created. Please check your email to verify your address.");
+    router.push("/verify-email");
   };
 
   return (
