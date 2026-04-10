@@ -26,6 +26,9 @@ export function mapListingToCard(
     isFeatured: listing.isFeatured,
     isSaved: (listing.savedBy?.length ?? 0) > 0,
     status: listing.status as ListingStatus,
+    availabilityType: listing.availabilityType,
+    availableFrom: listing.availableFrom ? listing.availableFrom.toISOString() : null,
+    availableTo: listing.availableTo ? listing.availableTo.toISOString() : null,
     agent: {
       name: listing.agent.name,
       avatar: listing.agent.avatarThumb ?? listing.agent.avatar,

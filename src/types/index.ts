@@ -25,6 +25,9 @@ export type PropertyCardListing = {
   isFeatured: boolean;
   isSaved?: boolean;
   status?: ListingStatus;
+  availabilityType?: string | null;
+  availableFrom?: string | null;
+  availableTo?: string | null;
   agent: {
     name: string | null;
     avatar?: string | null;

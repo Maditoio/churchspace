@@ -336,3 +336,26 @@ export async function sendPaymentDisputeStatusEmail(args: {
     }),
   );
 }
+
+export async function sendListingReportEmail(
+  to: string,
+  listing: { id: string; title: string; slug: string; siteUrl: string },
+  report: { reason: string; details: string },
+) {
+  const listingUrl = `${listing.siteUrl}/listings/${listing.slug}`;
+  return sendEmail(
+    to,
+    `Listing Report: ${listing.title}`,
+    standardEmailTemplate({
+      eyebrow: "Listing Report",
+      title: "A Listing Has Been Reported",
+      body: `
+        <p><strong>Listing:</strong> <a href="${listingUrl}" style="color:#1A1A2E;">${escapeHtml(listing.title)}</a></p>
+        <p><strong>Reason:</strong> ${escapeHtml(report.reason)}</p>
+        ${report.details ? `<p><strong>Additional details:</strong> ${escapeHtml(report.details)}</p>` : ""}
+      `,
+      ctaHref: `${listing.siteUrl}/admin/listings/${listing.id}`,
+      ctaLabel: "View in Admin",
+    }),
+  );
+}

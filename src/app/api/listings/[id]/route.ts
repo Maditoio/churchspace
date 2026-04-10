@@ -59,6 +59,8 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
   const isAdmin = session.user.role === "SUPER_ADMIN";
   if (!isOwner && !isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  // Enquiry has no onDelete cascade — must be deleted manually before deleting the listing
+  await prisma.enquiry.deleteMany({ where: { listingId: id } });
   await prisma.listing.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }
