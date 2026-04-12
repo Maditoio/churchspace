@@ -110,7 +110,13 @@ export default async function AdminPaymentsPage({
                 <td className="px-4 py-3">
                   {payment.disputes[0] ? <PaymentDisputeStatusBadge status={payment.disputes[0].status} /> : <span className="text-xs text-(--text-secondary)">None</span>}
                 </td>
-                <td className="px-4 py-3 text-xs text-(--text-secondary)">{payment.reference}</td>
+                <td className="px-4 py-3 text-xs text-(--text-secondary)">
+                  {(() => {
+                    const ref = payment.reference ?? "";
+                    const parts = ref.split("-");
+                    return parts.length >= 2 ? `${parts[0]}-${parts[1]}` : ref;
+                  })()}
+                </td>
               </tr>
             ))}
             {payments.length === 0 ? (
