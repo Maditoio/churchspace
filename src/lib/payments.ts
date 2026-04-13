@@ -98,11 +98,13 @@ async function paystackRequest<T>(path: string, init?: RequestInit): Promise<T> 
 }
 
 export function getPaystackCallbackUrl() {
-  return `${getAppBaseUrl()}/api/paystack/callback`;
+  const configuredUrl = process.env.PAYSTACK_CALLBACK_URL;
+  return (configuredUrl ?? `${getAppBaseUrl()}/api/paystack/callback`).replace(/\/$/, "");
 }
 
 export function getPaystackWebhookUrl() {
-  return `${getAppBaseUrl()}/api/paystack/webhook`;
+  const configuredUrl = process.env.PAYSTACK_WEBHOOK_URL;
+  return (configuredUrl ?? `${getAppBaseUrl()}/api/paystack/webhook`).replace(/\/$/, "");
 }
 
 export async function initializePaystackTransaction(args: PaystackInitializeArgs) {
