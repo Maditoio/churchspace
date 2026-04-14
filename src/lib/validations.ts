@@ -1,4 +1,4 @@
-import { ListingType, PropertyType, AvailabilityType } from "@prisma/client";
+import { AvailabilityType, ListingType, PromotionType, PropertyType } from "@prisma/client";
 import { z } from "zod";
 
 export const signUpSchema = z.object({
@@ -53,6 +53,23 @@ export const paymentDisputeUpdateSchema = z.object({
   adminNotes: z.string().trim().max(2000).optional().or(z.literal("")),
 });
 
+export const promotionUpsertSchema = z.object({
+  name: z.string().trim().min(3).max(80),
+  description: z.string().trim().max(400).optional().or(z.literal("")),
+  type: z.nativeEnum(PromotionType),
+  discountValue: z.number().nonnegative(),
+  maxUses: z.number().int().positive().optional().nullable(),
+  maxFreeListings: z.number().int().positive().optional().nullable(),
+  maxUsesPerUser: z.number().int().positive().optional().nullable(),
+  validFrom: z.string().datetime(),
+  validUntil: z.string().datetime(),
+  isActive: z.boolean().optional(),
+});
+
+export const promotionCodeApplySchema = z.object({
+  promotionCode: z.string().trim().min(2).max(80),
+});
+
 export const listingSchema = z.object({
   title: z.string().min(10),
   description: z.string().min(100),
@@ -91,3 +108,4 @@ export const listingSchema = z.object({
 export type ListingInput = z.infer<typeof listingSchema>;
 export type PaymentDisputeCreateInput = z.infer<typeof paymentDisputeCreateSchema>;
 export type PaymentDisputeUpdateInput = z.infer<typeof paymentDisputeUpdateSchema>;
+export type PromotionUpsertInput = z.infer<typeof promotionUpsertSchema>;

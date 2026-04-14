@@ -24,6 +24,7 @@ type PaystackVerificationData = {
   metadata?: {
     listingId?: string;
     userId?: string;
+    promotionUsageId?: string;
   } | null;
 };
 
@@ -141,6 +142,87 @@ export function isValidPaystackWebhookSignature(rawBody: string, signature: stri
   return timingSafeEqual(expected, received);
 }
 
+async function activateListingAndUpsertPayment(args: {
+  listingId: string;
+  userId: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  provider: string;
+  paidAt: Date;
+  promotionUsageId?: string;
+}) {
+  const expiresAt = addOneYear(args.paidAt);
+
+  const [listing, payment] = await prisma.$transaction(async (tx) => {
+    const listing = await tx.listing.findUnique({ where: { id: args.listingId } });
+    if (!listing) {
+      throw new Error("Listing not found for verified payment");
+    }
+
+    if (args.promotionUsageId) {
+      const usage = await tx.promotionUsage.findUnique({ where: { id: args.promotionUsageId } });
+      if (!usage) {
+        throw new Error("Promotion usage record not found");
+      }
+
+      if (usage.listingId !== args.listingId || usage.userId !== args.userId) {
+        throw new Error("Promotion usage does not match payment metadata");
+      }
+
+      if (usage.paymentReference && usage.paymentReference !== args.reference) {
+        throw new Error("Promotion usage is already linked to a different payment reference");
+      }
+
+      await tx.promotionUsage.update({
+        where: { id: usage.id },
+        data: { paymentReference: args.reference },
+      });
+    }
+
+    const nextStatus = listing.status === ListingStatus.INACTIVE ? ListingStatus.ACTIVE : listing.status;
+
+    const nextListing = await tx.listing.update({
+      where: { id: args.listingId },
+      data: {
+        paymentStatus: "PAID",
+        paymentPaidAt: args.paidAt,
+        paymentExpiresAt: expiresAt,
+        isTaken: false,
+        takenAt: null,
+        status: nextStatus,
+      },
+    });
+
+    const payment = await tx.listingPayment.upsert({
+      where: { reference: args.reference },
+      update: {
+        amount: args.amount,
+        currency: args.currency,
+        status: "PAID",
+        provider: args.provider,
+        paidAt: args.paidAt,
+        expiresAt,
+      },
+      create: {
+        listingId: args.listingId,
+        userId: args.userId,
+        amount: args.amount,
+        currency: args.currency,
+        status: "PAID",
+        provider: args.provider,
+        reference: args.reference,
+        paidAt: args.paidAt,
+        expiresAt,
+      },
+    });
+
+    return [nextListing, payment] as const;
+  });
+
+  return { listing, payment, expiresAt };
+}
+
 export async function finalizeListingPaymentFromPaystack(reference: string) {
   const transaction = await verifyPaystackTransaction(reference);
   if (transaction.status !== "success") {
@@ -154,55 +236,41 @@ export async function finalizeListingPaymentFromPaystack(reference: string) {
   }
 
   const paidAt = transaction.paid_at ? new Date(transaction.paid_at) : new Date();
-  const expiresAt = addOneYear(paidAt);
-
-  const [listing, payment] = await prisma.$transaction(async (tx) => {
-    const listing = await tx.listing.findUnique({ where: { id: listingId } });
-    if (!listing) {
-      throw new Error("Listing not found for verified Paystack payment");
-    }
-
-    const nextStatus = listing.status === ListingStatus.INACTIVE ? ListingStatus.ACTIVE : listing.status;
-
-    const nextListing = await tx.listing.update({
-      where: { id: listingId },
-      data: {
-        paymentStatus: "PAID",
-        paymentPaidAt: paidAt,
-        paymentExpiresAt: expiresAt,
-        isTaken: false,
-        takenAt: null,
-        status: nextStatus,
-      },
-    });
-
-    const payment = await tx.listingPayment.upsert({
-      where: { reference },
-      update: {
-        amount: transaction.amount / 100,
-        currency: transaction.currency,
-        status: "PAID",
-        provider: "PAYSTACK",
-        paidAt,
-        expiresAt,
-      },
-      create: {
-        listingId,
-        userId,
-        amount: transaction.amount / 100,
-        currency: transaction.currency,
-        status: "PAID",
-        provider: "PAYSTACK",
-        reference,
-        paidAt,
-        expiresAt,
-      },
-    });
-
-    return [nextListing, payment] as const;
+  const { listing, payment } = await activateListingAndUpsertPayment({
+    listingId,
+    userId,
+    reference,
+    amount: transaction.amount / 100,
+    currency: transaction.currency,
+    provider: "PAYSTACK",
+    paidAt,
+    promotionUsageId: transaction.metadata?.promotionUsageId,
   });
 
   return { listing, payment, transaction };
+}
+
+export async function finalizeListingPaymentViaPromotion(args: {
+  listingId: string;
+  userId: string;
+  reference: string;
+  amount: number;
+  currency?: string;
+  promotionUsageId: string;
+}) {
+  const paidAt = new Date();
+  const { listing, payment } = await activateListingAndUpsertPayment({
+    listingId: args.listingId,
+    userId: args.userId,
+    reference: args.reference,
+    amount: args.amount,
+    currency: args.currency ?? LISTING_PAYMENT_CURRENCY,
+    provider: "PROMOTION",
+    paidAt,
+    promotionUsageId: args.promotionUsageId,
+  });
+
+  return { listing, payment };
 }
 
 export function addOneYear(date: Date) {

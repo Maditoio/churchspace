@@ -44,6 +44,18 @@ enum ListingPaymentStatus {
   EXPIRED
 }
 
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+  FREE_LISTING
+}
+
+enum PromotionUsagePaymentStatus {
+  PAID
+  FREE_VIA_PROMO
+  PARTIAL_PAID
+}
+
 enum PaymentDisputeStatus {
   OPEN
   UNDER_REVIEW
@@ -84,6 +96,7 @@ model User {
   notifications Notification[]
   paymentDisputes PaymentDispute[] @relation("PaymentDisputeReporter")
   managedPaymentDisputes PaymentDispute[] @relation("PaymentDisputeAssignee")
+  promotionUsages PromotionUsage[]
 }
 
 model Account {
@@ -167,6 +180,7 @@ model Listing {
   notifications     Notification[]
   slots             AvailabilitySlot[]
   payments          ListingPayment[]
+  promotionUsages   PromotionUsage[]
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -319,4 +333,46 @@ model UserSearchPreference {
 
   @@index([lastSearchedAt])
   @@unique([userId, fingerprint])
+}
+
+model Promotion {
+  id               String      @id @default(uuid())
+  name             String      @unique
+  codeNormalized   String      @unique
+  description      String?
+  type             PromotionType
+  discountValue    Decimal     @db.Decimal(10, 2)
+  maxUses          Int?
+  usedCount        Int         @default(0)
+  maxFreeListings  Int?
+  freeListingsUsed Int         @default(0)
+  maxUsesPerUser   Int?
+  validFrom        DateTime
+  validUntil       DateTime
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  usages           PromotionUsage[]
+
+  @@index([isActive, validFrom, validUntil])
+}
+
+model PromotionUsage {
+  id              String                     @id @default(uuid())
+  promotionId     String
+  userId          String
+  listingId       String
+  paymentReference String?                   @unique
+  originalPrice   Decimal                    @db.Decimal(10, 2)
+  discountApplied Decimal                    @db.Decimal(10, 2)
+  finalPrice      Decimal                    @db.Decimal(10, 2)
+  paymentStatus   PromotionUsagePaymentStatus
+  createdAt       DateTime                   @default(now())
+  promotion       Promotion                  @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing         Listing                    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId, createdAt])
+  @@index([userId, createdAt])
+  @@index([listingId, createdAt])
 }

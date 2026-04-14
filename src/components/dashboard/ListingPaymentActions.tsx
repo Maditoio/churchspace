@@ -86,9 +86,24 @@ export function ListingPaymentActions({
   async function pay() {
     setLoadingAction("pay");
     setOpen(false);
-    const res = await fetch(`/api/listings/${listingId}/payment`, { method: "POST" });
+    const res = await fetch(`/api/listings/${listingId}/payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
     const payload = await res.json().catch(() => null);
     setLoadingAction(null);
+
+    if (res.ok && payload?.requiresPromotion && payload?.redirectUrl) {
+      router.push(payload.redirectUrl);
+      return;
+    }
+
+    if (res.ok && payload?.freeApplied) {
+      toast.success("Promotion applied. Listing activated without payment.");
+      router.push(`/dashboard/payments?payment=success&reference=${encodeURIComponent(payload?.payment?.reference ?? "")}`);
+      return;
+    }
 
     if (res.ok && payload?.authorizationUrl) {
       window.location.href = payload.authorizationUrl;

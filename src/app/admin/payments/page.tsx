@@ -20,7 +20,7 @@ export default async function AdminPaymentsPage({
   const totalPayments = await prisma.listingPayment.count();
   const pagination = getPaginationMeta(totalPayments, parsePageParam(resolvedSearchParams?.page), PAGE_SIZE);
 
-  const [payments, aggregateAll, aggregateMonth, payerGroups, activeDisputes] = await Promise.all([
+  const [payments, aggregateAll, aggregateMonth, payerGroups, activeDisputes, promoAggregate, freeViaPromoCount] = await Promise.all([
     prisma.listingPayment.findMany({
       include: {
         listing: { select: { id: true, title: true, slug: true } },
@@ -46,11 +46,17 @@ export default async function AdminPaymentsPage({
     }),
     prisma.listingPayment.groupBy({ by: ["userId"] }),
     prisma.paymentDispute.count({ where: { status: { in: activePaymentDisputeStatuses } } }),
+    prisma.promotionUsage.aggregate({
+      _sum: { discountApplied: true },
+      _count: { _all: true },
+    }),
+    prisma.promotionUsage.count({ where: { paymentStatus: "FREE_VIA_PROMO" } }),
   ]);
 
   const totalRevenue = Number(aggregateAll._sum.amount ?? 0);
   const monthRevenue = Number(aggregateMonth._sum.amount ?? 0);
   const uniquePayers = payerGroups.length;
+  const promoDiscountTotal = Number(promoAggregate._sum.discountApplied ?? 0);
 
   return (
     <div className="space-y-8">
@@ -65,12 +71,14 @@ export default async function AdminPaymentsPage({
         <Link href="/admin/disputes"><Button variant="secondary">Manage Disputes</Button></Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-7">
         <StatsCard label="Total Revenue" value={formatPaymentCurrency(totalRevenue, LISTING_PAYMENT_CURRENCY)} />
         <StatsCard label="Revenue This Month" value={formatPaymentCurrency(monthRevenue, LISTING_PAYMENT_CURRENCY)} />
         <StatsCard label="Total Payments" value={aggregateAll._count._all} />
         <StatsCard label="Unique Payers" value={uniquePayers} />
         <StatsCard label="Active Disputes" value={activeDisputes} />
+        <StatsCard label="Promo Discounts" value={formatPaymentCurrency(promoDiscountTotal, LISTING_PAYMENT_CURRENCY)} />
+        <StatsCard label="Free Via Promo" value={freeViaPromoCount} />
       </div>
 
       <section className="overflow-x-auto rounded-(--radius) border border-(--border) bg-white">
